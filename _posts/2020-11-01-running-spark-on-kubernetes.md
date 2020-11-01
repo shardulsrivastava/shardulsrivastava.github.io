@@ -7,7 +7,6 @@ tags: [spark, kubernetes]
 image: assets/images/spark.jpg
 description: "A tutorial on runnning apache spark on Kubernetes using spark submit and Spark on K8s Operator"
 featured: true
-hidden: true
 comments: false
 ---
 
