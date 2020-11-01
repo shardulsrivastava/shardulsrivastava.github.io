@@ -1,0 +1,83 @@
+I"�<p>{% assign counter = 0 %}
+var documents = [{% for page in site.pages %}{% if page.url contains ‘.xml’ or page.url contains ‘assets’ or page.url contains ‘category’ or page.url contains ‘tag’ %}{% else %}{
+    “id”: {{ counter }},
+    “url”: “{{ site.url }}{{site.baseurl}}{{ page.url }}”,
+    “title”: “{{ page.title }}”,
+    “body”: “{{ page.content | markdownify | replace: ‘.’, ‘. ‘ | replace: ‘&lt;/h2&gt;’, ‘: ‘ | replace: ‘&lt;/h3&gt;’, ‘: ‘ | replace: ‘&lt;/h4&gt;’, ‘: ‘ | replace: ‘&lt;/p&gt;’, ‘ ‘ | strip_html | strip_newlines | replace: ‘  ‘, ‘ ‘ | replace: ‘”’, ‘ ‘ }}”{% assign counter = counter | plus: 1 %}
+    }, {% endif %}{% endfor %}{% for page in site.without-plugin %}{
+    “id”: {{ counter }},
+    “url”: “{{ site.url }}{{site.baseurl}}{{ page.url }}”,
+    “title”: “{{ page.title }}”,
+    “body”: “{{ page.content | markdownify | replace: ‘.’, ‘. ‘ | replace: ‘&lt;/h2&gt;’, ‘: ‘ | replace: ‘&lt;/h3&gt;’, ‘: ‘ | replace: ‘&lt;/h4&gt;’, ‘: ‘ | replace: ‘&lt;/p&gt;’, ‘ ‘ | strip_html | strip_newlines | replace: ‘  ‘, ‘ ‘ | replace: ‘”’, ‘ ‘ }}”{% assign counter = counter | plus: 1 %}
+    }, {% endfor %}{% for page in site.posts %}{
+    “id”: {{ counter }},
+    “url”: “{{ site.url }}{{site.baseurl}}{{ page.url }}”,
+    “title”: “{{ page.title }}”,
+    “body”: “{{ page.date | date: “%Y/%m/%d” }} - {{ page.content | markdownify | replace: ‘.’, ‘. ‘ | replace: ‘&lt;/h2&gt;’, ‘: ‘ | replace: ‘&lt;/h3&gt;’, ‘: ‘ | replace: ‘&lt;/h4&gt;’, ‘: ‘ | replace: ‘&lt;/p&gt;’, ‘ ‘ | strip_html | strip_newlines | replace: ‘  ‘, ‘ ‘ | replace: ‘”’, ‘ ‘ }}”{% assign counter = counter | plus: 1 %}
+    }{% if forloop.last %}{% else %}, {% endif %}{% endfor %}];</p>
+
+<p>var idx = lunr(function () {
+    this.ref(‘id’)
+    this.field(‘title’)
+    this.field(‘body’)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>documents.forEach(function (doc) {
+    this.add(doc)
+}, this) }); function lunr_search(term) {
+document.getElementById('lunrsearchresults').innerHTML = '&lt;ul&gt;&lt;/ul&gt;';
+if(term) {
+    document.getElementById('lunrsearchresults').innerHTML = "&lt;p&gt;Search results for '" + term + "'&lt;/p&gt;" + document.getElementById('lunrsearchresults').innerHTML;
+    //put results on the screen.
+    var results = idx.search(term);
+    if(results.length&gt;0){
+        //console.log(idx.search(term));
+        //if results
+        for (var i = 0; i &lt; results.length; i++) {
+            // more statements
+            var ref = results[i]['ref'];
+            var url = documents[ref]['url'];
+            var title = documents[ref]['title'];
+            var body = documents[ref]['body'].substring(0,160)+'...';
+            document.querySelectorAll('#lunrsearchresults ul')[0].innerHTML = document.querySelectorAll('#lunrsearchresults ul')[0].innerHTML + "&lt;li class='lunrsearchresult'&gt;&lt;a href='" + url + "'&gt;&lt;span class='title'&gt;" + title + "&lt;/span&gt;&lt;br /&gt;&lt;span class='body'&gt;"+ body +"&lt;/span&gt;&lt;br /&gt;&lt;span class='url'&gt;"+ url +"&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;";
+        }
+    } else {
+        document.querySelectorAll('#lunrsearchresults ul')[0].innerHTML = "&lt;li class='lunrsearchresult'&gt;No results found...&lt;/li&gt;";
+    }
+}
+return false; }
+</code></pre></div></div>
+
+<p>function lunr_search(term) {
+    $(‘#lunrsearchresults’).show( 400 );
+    $( “body” ).addClass( “modal-open” );</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>document.getElementById('lunrsearchresults').innerHTML = '&lt;div id="resultsmodal" class="modal fade show d-block"  tabindex="-1" role="dialog" aria-labelledby="resultsmodal"&gt; &lt;div class="modal-dialog shadow-lg" role="document"&gt; &lt;div class="modal-content"&gt; &lt;div class="modal-header" id="modtit"&gt; &lt;button type="button" class="close" id="btnx" data-dismiss="modal" aria-label="Close"&gt; &amp;times; &lt;/button&gt; &lt;/div&gt; &lt;div class="modal-body"&gt; &lt;ul class="mb-0"&gt; &lt;/ul&gt;    &lt;/div&gt; &lt;div class="modal-footer"&gt;&lt;button id="btnx" type="button" class="btn btn-danger btn-sm" data-dismiss="modal"&gt;Close&lt;/button&gt;&lt;/div&gt;&lt;/div&gt; &lt;/div&gt;&lt;/div&gt;';
+if(term) {
+    document.getElementById('modtit').innerHTML = "&lt;h5 class='modal-title'&gt;Search results for '" + term + "'&lt;/h5&gt;" + document.getElementById('modtit').innerHTML;
+    //put results on the screen.
+    var results = idx.search(term);
+    if(results.length&gt;0){
+        //console.log(idx.search(term));
+        //if results
+        for (var i = 0; i &lt; results.length; i++) {
+            // more statements
+            var ref = results[i]['ref'];
+            var url = documents[ref]['url'];
+            var title = documents[ref]['title'];
+            var body = documents[ref]['body'].substring(0,160)+'...';
+            document.querySelectorAll('#lunrsearchresults ul')[0].innerHTML = document.querySelectorAll('#lunrsearchresults ul')[0].innerHTML + "&lt;li class='lunrsearchresult'&gt;&lt;a href='" + url + "'&gt;&lt;span class='title'&gt;" + title + "&lt;/span&gt;&lt;br /&gt;&lt;small&gt;&lt;span class='body'&gt;"+ body +"&lt;/span&gt;&lt;br /&gt;&lt;span class='url'&gt;"+ url +"&lt;/span&gt;&lt;/small&gt;&lt;/a&gt;&lt;/li&gt;";
+        }
+    } else {
+        document.querySelectorAll('#lunrsearchresults ul')[0].innerHTML = "&lt;li class='lunrsearchresult'&gt;Sorry, no results found. Close &amp; try a different search!&lt;/li&gt;";
+    }
+}
+return false; }
+</code></pre></div></div>
+
+<p>$(function() {
+    $(“#lunrsearchresults”).on(‘click’, ‘#btnx’, function () {
+        $(‘#lunrsearchresults’).hide( 5 );
+        $( “body” ).removeClass( “modal-open” );
+    });
+});</p>
+:ET

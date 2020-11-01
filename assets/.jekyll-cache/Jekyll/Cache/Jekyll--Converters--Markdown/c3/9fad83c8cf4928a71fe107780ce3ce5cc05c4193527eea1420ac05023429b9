@@ -1,0 +1,11 @@
+I"l<p>/* We need to add display:inline in order to align the ‘»’ of the ‘read more’ link */
+.post-excerpt p {
+	display:inline;
+}</p>
+
+<p>// Import partials from <code class="language-plaintext highlighter-rouge">sass_dir</code> (defaults to <code class="language-plaintext highlighter-rouge">_sass</code>)
+@import
+	“syntax”,
+    “starsnonscss”
+;</p>
+:ET

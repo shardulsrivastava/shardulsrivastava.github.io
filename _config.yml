@@ -1,7 +1,7 @@
 # Site
-name: "Mediumish"
-title: "Mediumish"
-description: "Jekyll template, Medium styled, free for bloggers."
+name: "Shardul's Tech Blog"
+title: "Shardul's Tech Blog"
+description: "Multi Cloud and Big Data Technologies"
 logo: 'assets/images/logo.png'
 favicon: 'assets/images/logo.png'
 baseurl: ''
@@ -21,15 +21,15 @@ authors:
     web: https://www.wowthemes.net
     twitter: https://twitter.com/wowthemesnet
     description: "Author of Mediumish, a Bootstrap Medium styled template available for WordPress, HTML, Ghost and Jekyll. You are currently previewing Jekyll template demo."
-  john:
-    name: John
-    display_name: John    
-    avatar: 'assets/images/avatar.png'
+  shardul:
+    name: Shardul
+    display_name: Shardul    
+    avatar: 'assets/images/shardul.jpeg'
     gravatar: b1cc14991db7a456fcd761680bbc8f81
-    email: wowthemesnet@gmail.com
-    web: https://www.wowthemes.net
-    twitter: https://twitter.com/wowthemesnet
-    description: "This is the author box. Write a short description of the author here. You are currently previewing Mediumish demo, a Jekyll template compatible with Github pages."
+    email: shardul.srivastava007@gmail.com
+    web: https://shardul.dev
+    twitter: https://twitter.com/shardulsrivast
+    description: "Shardul is a Cloud architect focused on Data and Infrastructure"
 
 # Plugins
 plugins:
@@ -71,4 +71,4 @@ lazyimages: "disabled"
 
 exclude: [changelog.md, LICENSE.txt, README.md, Gemfile, Gemfile.lock]
 
-theme: jekyll-theme-cayman
+theme: jekyll
