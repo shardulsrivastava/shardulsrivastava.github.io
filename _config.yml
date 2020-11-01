@@ -3,7 +3,7 @@ name: "Shardul's Tech Blog"
 title: "Shardul's Tech Blog"
 description: "Multi Cloud and Big Data Technologies"
 logo: 'assets/images/logo1.png'
-favicon: 'assets/images/logo1.png'
+favicon: 'assets/images/logo.png'
 baseurl: ''
 google_analytics: 'UA-46278016-1'
 disqus: 'demowebsite'
