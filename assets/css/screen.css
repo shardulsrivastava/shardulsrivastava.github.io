@@ -31,6 +31,20 @@ License: https://www.wowthemes.net/freebies-license/
     padding-right: 30px !important
 }
 
+a.nav-btn.complete,a.nav-btn:hover {
+    background: #09A59A;
+    color: #fff !important;;
+    text-decoration: none;
+    align-items: center;
+    color: #54616a ;
+    display: flex !important;
+    flex: 1;
+    font-size: 30px;
+    justify-content: center;
+    border-left: 1px solid #d7dadb;
+}
+
+
 a {
     color: #00ab6b;
     transition: all 0.2s;

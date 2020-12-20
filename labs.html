@@ -121,7 +121,14 @@ permalink: /labs.html
 
 <div class="lecture-attachment lecture-attachment-type-code_embed" id="lecture-attachment-19704776">
   <div class="attachment-data"></div>
-    <div id="kk_scenario">
+  <div id="complete-continune">
+    <a class="nav-btn complete" data-cpl-tooltip="You must complete all lecture material before progressing." href="" role="button" id="lecture_complete_button" data-loading-url="">
+      <span class="nav-text">Complete and continue</span>
+      &nbsp;
+      <i class="fa fa-arrow-right" aria-hidden="true"></i>
+    </a></br>
+  </div>
+  <div id="kk_scenario">
       <!-- <div id="start-lab-button" style="text-align: center; margin-top: 200px;"></div> -->
   </div>
 </div>
@@ -138,11 +145,14 @@ permalink: /labs.html
 </div> -->
 
 <script>
+    $(document).ready(function(){
+      $('#complete-continune').hide();
+    });
     var scenario_div_name = '#kk_scenario';
     
     var startLab = function(scenario_name){
-        //$('#start-lab-button').remove();
         
+      $('#complete-continune').show();
         //var scenario_name = $(scenario_div_name).attr('name')
         var lab_name = $('#kk_scenario').attr("lab")
         var data_katacoda_command = "";
