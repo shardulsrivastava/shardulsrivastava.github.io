@@ -11,6 +11,41 @@ License: https://www.wowthemes.net/freebies-license/
     padding: 1rem 0rem;
 }
 
+/* Custom CSS */
+
+.btn-md,.btn-md:active,.btn-md:focus {
+    text-transform: uppercase;
+    background: #09A59A !important;
+    border: 1px solid #09A59A !important;
+    font-weight: 600 !important;
+    outline: none !important;
+    color: #fff !important;
+    border-radius: 20px;
+    padding: 3px 18px !important;
+    display: inline-block;
+    border-radius: 50px !important;
+    font-size: 13px !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    padding-left: 30px !important;
+    padding-right: 30px !important
+}
+
+a.nav-btn.complete,a.nav-btn:hover {
+    background: #09A59A;
+    color: #fff !important;;
+    text-decoration: none;
+    align-items: center;
+    color: #54616a ;
+    display: flex !important;
+    flex: 1;
+    font-size: 30px;
+    justify-content: center;
+    border-left: 1px solid #d7dadb;
+}
+
+ /* Custom CSS */
+
 a {
     color: #00ab6b;
     transition: all 0.2s;
