@@ -125,7 +125,7 @@ curl nginx
 
 this should show the response like this :
 
-[nginx-test]({{ site.baseurl }}/assets/images/nginx-test.png)
+![nginx-test]({{ site.baseurl }}/assets/images/nginx-test-highresolution.png)
 
 
 + Create your first Chaos Experiment by running :
