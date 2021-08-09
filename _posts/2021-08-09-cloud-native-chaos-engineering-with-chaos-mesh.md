@@ -110,13 +110,13 @@ kubectl get pods -n chaos-testing
 
 Chaos Experiment describes how and what type of fault is injected. 
 
-1. Setup a Nginx pod and expose it as a serfice on port 80. 
++ Setup a Nginx pod and expose it as a service on port 80. 
 
 ```bash
 k run nginx --image=nginx --labels="app=nginx" --port=80 --expose
 ```
 
-2. Open another terminal and setup a test pod to test connectivity to nginx service :
++ Open another terminal and setup a test pod to test the connectivity to nginx service :
 
 ```bash
 kubectl run -it test-connection --image=radial/busyboxplus:curl -- sh
@@ -128,7 +128,7 @@ this should show the response like this :
 [nginx-test]({{ site.baseurl }}/assets/images/nginx-test.png)
 
 
-3. Create your first Chaos Experiment by running :
++ Create your first Chaos Experiment by running :
 
 ```bash
 kubectl apply -f - <<EOF
@@ -152,7 +152,7 @@ EOF
 
 this will introduce a delay of 1 seconds in the response of nginx service for 12 seconds.
 
-4. Test the response of you nginx service now to see the delay of 1 seconds.
++ Test the response of you nginx service now to see the delay of 1 seconds.
 
 
 
