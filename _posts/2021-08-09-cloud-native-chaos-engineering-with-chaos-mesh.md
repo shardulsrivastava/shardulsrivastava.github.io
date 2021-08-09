@@ -4,8 +4,8 @@ title:  "Cloud Native Chaos Engineering with Chaos Mesh"
 author: shardul
 categories: [ chaosengineering, kubernetes ]
 tags: [chaosengineering, kubernetes]
-# image: assets/images/spark.jpg
-description: "Chaos Engineering with Chaos Mesh"
+image: assets/images/chaos-mesh-cncf.png
+description: "Cloud Native Chaos Engineering with Chaos Mesh"
 featured: true
 comments: false
 ---
