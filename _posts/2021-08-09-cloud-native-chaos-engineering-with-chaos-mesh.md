@@ -3,7 +3,7 @@ layout: post
 title:  "Cloud Native Chaos Engineering with Chaos Mesh"
 author: shardul
 tags: [chaosengineering, kubernetes]
-image: assets/images/chaos-mesh-cncf.png
+image: assets/images/chaos-enginnering.jpg
 description: "Cloud Native Chaos Engineering with Chaos Mesh"
 featured: true
 comments: false
