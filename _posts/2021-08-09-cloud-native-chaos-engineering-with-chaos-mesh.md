@@ -72,13 +72,7 @@ To install Chaos Mesh using Helm :
 helm repo add chaos-mesh https://charts.chaos-mesh.org
 ``` 
 
-+ It's recommended to install ChaosMesh in a separate namespace, so you can either create a namespace `chaos-testing` manually.
-
-```bash
-kubectl create ns chaos-testing
-```
-
-or let Helm create it, if it doesn't exist :
++ It's recommended to install ChaosMesh in a separate namespace, so you can either create a namespace `chaos-testing` manually or let Helm create it automatically, if it doesn't exist :
 
 ```bash
 helm upgrade \
@@ -87,6 +81,21 @@ helm upgrade \
      chaos-mesh/chaos-mesh \
      -n chaos-testing \
      --create-namespace \
+     --version v2.0.0 \
+     --wait
+```
+
+Note: If you're using GKE or EKS with `containerd`, then use
+
+```bash
+helm upgrade \
+     --install \
+     chaos-mesh \
+     chaos-mesh/chaos-mesh \
+     -n chaos-testing \
+     --create-namespace \
+     --set chaosDaemon.runtime=containerd \
+     --set chaosDaemon.socketPath=/run/containerd/containerd.sock \
      --version v2.0.0 \
      --wait
 ```
