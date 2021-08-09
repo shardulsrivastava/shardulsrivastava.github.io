@@ -109,7 +109,26 @@ kubectl get pods -n chaos-testing
 #### Run First Chaos Mesh Experiment
 
 Chaos Experiment describes how and what type of fault is injected. 
-Create your first Chaos Experiment by running :
+
+1. Setup a Nginx pod and expose it as a serfice on port 80. 
+
+```bash
+k run nginx --image=nginx --labels="app=nginx" --port=80 --expose
+```
+
+2. Open another terminal and setup a test pod to test connectivity to nginx service :
+
+```bash
+kubectl run -it test-connection --image=radial/busyboxplus:curl -- sh
+curl nginx
+```
+
+this should show the response like this :
+
+[nginx-test]({{ site.baseurl }}/assets/images/nginx-test.png)
+
+
+3. Create your first Chaos Experiment by running :
 
 ```bash
 kubectl apply -f - <<EOF
@@ -124,10 +143,16 @@ spec:
     namespaces:
       - default
     labelSelectors:
-      'app': 'web-show'
+      'app': 'nginx'
   delay:
-    latency: '10ms'
+    latency: '1s'
   duration: '12s'
 EOF
 ```
+
+this will introduce a delay of 1 seconds in the response of nginx service for 12 seconds.
+
+4. Test the response of you nginx service now to see the delay of 1 seconds.
+
+
 
