@@ -37,7 +37,7 @@ CNCF has two sandbox projects for Cloud Native Chaos Engineering
 2. [Litmus Chaos](https://github.com/litmuschaos/litmus)
 
 
-![cncf-chaos-engineering]({{ site.baseurl }}/assets/images/cncf-chaos-engineering.png)
+![cncf-chaos-engineering](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/gmb5uh3kd7q6izwjsf3i.png)
 
 
 #### Chaos Mesh
@@ -119,11 +119,11 @@ Chaos Experiment describes what type of fault is injected and how.
 
    ```bash
    kubectl run -it test-connection --image=radial/busyboxplus:curl -- sh
-   curl nginx
+   time curl -I nginx
    ```
    this should show the response like this :
 
-   ![nginx-test]({{ site.baseurl }}/assets/images/nginx-test.png)
+   ![nginx-test](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/owjds2cl518ry5eutts7.png)
 
 
 3. Create your first Chaos Experiment by running :
@@ -148,7 +148,7 @@ Chaos Experiment describes what type of fault is injected and how.
    EOF
    ```
 
-   this will create a CRD of type `NetworkChaos` that will introduce a latency of `1 seconds` in the response of application with labels `app:nginx` i.e nginx service for the next 60 seconds.
+   this will create a CRD of type `NetworkChaos` that will introduce a latency of `1 seconds` in the response of application with labels `app:nginx` i.e nginx service for the next `60 seconds`.
 
-4. Test the response of you nginx service now to see the delay of 1 seconds.
+4. Test the response of you nginx service now to see the delay of `1 seconds`.
 
