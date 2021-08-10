@@ -143,7 +143,7 @@ Chaos Experiment describes what type of fault is injected and how.
        labelSelectors:
          'app': 'nginx'
      delay:
-       latency: '2s'
+       latency: '1s'
      duration: '60s'
    EOF
    ```
