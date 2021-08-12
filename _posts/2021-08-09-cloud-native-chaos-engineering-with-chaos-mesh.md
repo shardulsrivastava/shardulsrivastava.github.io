@@ -109,21 +109,27 @@ To install Chaos Mesh using Helm :
 
 Chaos Experiment describes what type of fault is injected and how.
 
-1. Setup a Nginx pod and expose it as a service on port 80. 
+1. Setup a Nginx pod and expose it on port 80.
 
    ```bash
-   kubectl run nginx --image=nginx --labels="app=nginx" --port=80 --expose
+   kubectl run nginx --image=nginx --labels="app=nginx" --port=80
+   ```
+2. Get the ip of the nginx pod
+
+   ```bash
+   kubectl get pods nginx -ojsonpath="{.status.podIP}"
    ```
 
-2. Open another terminal and setup a test pod to test the connectivity to nginx service :
+3. Open another terminal and setup a test pod to test the connectivity to nginx pod :
 
    ```bash
    kubectl run -it test-connection --image=radial/busyboxplus:curl -- sh
-   time curl -I nginx
+   ping <IP of the Nginx Pod> -c 2
    ```
-   this should show the response like this :
 
-   ![nginx-test](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/owjds2cl518ry5eutts7.png)
+   this should show you the time it takes to ping the IP : 
+
+   ![nginx-pod-connectivity](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/tpjo9rn4tw0gy2rb6mao.png)
 
 
 3. Create your first Chaos Experiment by running :
@@ -148,7 +154,9 @@ Chaos Experiment describes what type of fault is injected and how.
    EOF
    ```
 
-   this will create a CRD of type `NetworkChaos` that will introduce a latency of `1 seconds` in the response of application with labels `app:nginx` i.e nginx service for the next `60 seconds`.
+   this will create a CRD of type `NetworkChaos` that will introduce a latency of `1 seconds` in the network of pods with labels `app:nginx` i.e nginx pod for the next `60 seconds`.
 
-4. Test the response of you nginx service now to see the delay of `1 seconds`.
+4. Test the response of ping to the nginx pod now to see the delay of `1 seconds`.
 
+
+   ![nginx-pod-connectivity-with-delay](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/z0m58z0ya82bmf6hiwix.png)
