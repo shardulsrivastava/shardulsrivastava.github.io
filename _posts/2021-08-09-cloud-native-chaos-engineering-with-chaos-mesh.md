@@ -61,7 +61,7 @@ Chaos Operator uses Custom Resource Defition(CRD) to define chaos objects. It pr
 
 #### Chaos Mesh Installation 
 
-Chaos Mesh can be installed quickly using [installtion script](https://chaos-mesh.org/docs/quick-start#quick-installation). However, it's recommended to use Helm 3 chart in production environments.
+Chaos Mesh can be installed quickly using [installation script](https://chaos-mesh.org/docs/quick-start#quick-installation). However, it's recommended to use Helm 3 chart in production environments.
 
 To install Chaos Mesh using Helm :
 
