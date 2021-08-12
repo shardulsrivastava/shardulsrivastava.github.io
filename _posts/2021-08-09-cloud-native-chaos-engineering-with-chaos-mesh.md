@@ -109,12 +109,12 @@ To install Chaos Mesh using Helm :
 
 Chaos Experiment describes what type of fault is injected and how.
 
-1. Setup a Nginx pod and expose it on port 80.
+1. Setup an Nginx pod and expose it on port 80.
 
    ```bash
    kubectl run nginx --image=nginx --labels="app=nginx" --port=80
    ```
-2. Get the ip of the nginx pod
+2. Get the IP of the nginx pod
 
    ```bash
    kubectl get pods nginx -ojsonpath="{.status.podIP}"
@@ -127,7 +127,7 @@ Chaos Experiment describes what type of fault is injected and how.
    ping <IP of the Nginx Pod> -c 2
    ```
 
-   this should show you the time it takes to ping the IP : 
+   this should show you the time it takes to ping the IP :
 
    ![nginx-pod-connectivity](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/tpjo9rn4tw0gy2rb6mao.png)
 
@@ -154,9 +154,64 @@ Chaos Experiment describes what type of fault is injected and how.
    EOF
    ```
 
-   this will create a CRD of type `NetworkChaos` that will introduce a latency of `1 seconds` in the network of pods with labels `app:nginx` i.e nginx pod for the next `60 seconds`.
+   this will create a CRD of type `NetworkChaos` that will introduce a latency of `1 second` in the network of pods with labels `app:nginx` i.e nginx pod for the next `60 seconds`.
 
-4. Test the response of ping to the nginx pod now to see the delay of `1 seconds`.
+4. Test the response of ping to the nginx pod now to see the delay of `1 second`.
 
 
    ![nginx-pod-connectivity-with-delay](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/z0m58z0ya82bmf6hiwix.png)
+
+
+#### Run HTTPChaos Experiment
+
+`HTTPChaos` allows you to inject faults in the request and response of an HTTP server. It supports `abort`,`delay`,`replace`,`patch` fault types.
+
+`Note: Before proceeding, delete the NetworkChaos experiment created earlier.`
+
+
+1. Check the response time of nginx pod :
+
+   ```bash
+   kubectl exec -it test-connection -- sh
+   time curl <IP of the Nginx Pod>
+   ```
+   
+   ![nginx-pod-httpchaos](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/tspvf7p8ynhxh5gdnsfj.png)
+
+2. Create `HTTPSChaos` experiment by running:
+
+   ```bash
+   apiVersion: chaos-mesh.org/v1alpha1
+   kind: HTTPChaos
+   metadata:
+     name: nginx-http-delay
+   spec:
+     mode: all
+     selector:
+       labelSelectors:
+         app: nginx
+     target: Request
+     port: 80
+     delay: 1s
+     method: GET
+     path: /
+     duration: 5m
+   ```
+
+   this will create a CRD of type `HTTPChaos` that will introduce a latency of `1 seconds` to the requests sent to the pods with labels `app:nginx` i.e nginx pod on port 80 for the next `5 mins`.
+
+   Note: If you get an error like `admission webhook "vauth.kb.io" denied the request`, as of version 2.0 there is an open issue [2187](https://github.com/chaos-mesh/chaos-mesh/issues/2187) and a temporary fix is to delete the validating webhook.
+
+   ```bash
+   kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io validate-auth
+   ```
+
+3. Test the response time of nginx pod :
+
+   ```bash
+   time curl <IP of the Nginx Pod>
+   ```
+
+   you will see the additional `1 second` latency in the response.
+
+   ![nginx-pod-httpchaos-delay](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/hscss8vmlksy2sv9zp3e.png)
