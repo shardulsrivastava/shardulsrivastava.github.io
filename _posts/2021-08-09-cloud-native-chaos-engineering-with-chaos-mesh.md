@@ -181,6 +181,7 @@ Chaos Experiment describes what type of fault is injected and how.
 2. Create `HTTPSChaos` experiment by running:
 
    ```bash
+   kubectl apply -f - <<EOF
    apiVersion: chaos-mesh.org/v1alpha1
    kind: HTTPChaos
    metadata:
@@ -196,6 +197,7 @@ Chaos Experiment describes what type of fault is injected and how.
      method: GET
      path: /
      duration: 5m
+    EOF
    ```
 
    this will create a CRD of type `HTTPChaos` that will introduce a latency of `1 seconds` to the requests sent to the pods with labels `app:nginx` i.e nginx pod on port 80 for the next `5 mins`.
