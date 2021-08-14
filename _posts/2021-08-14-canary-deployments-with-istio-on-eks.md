@@ -9,10 +9,14 @@ featured: true
 comments: false
 ---
 
-Canary deployment is a way of deploying the application in a phased manner. In this pattern, we deploy a new version of the application alongside the production version, then split a percentage of traffic to the canary version and test it.
-Once 
+Canary deployment is a way of deploying the application in a phased manner. In this pattern, we deploy a new version of the application alongside the production version, then rollout the change to a small subset of servers. 
+Once new version of application is tested by the real users, then rollout the change out to the rest of the servers.
 
+Canary deployments can be complex and involve testing in production and manual verification.
 
+![canary-release](/assets/images/canary-release.png)
+
+To demonstrate Canary deployments, we will setup an EKS cluster, install Istio, deploy sample application and setup canary release of new version of application.
 
 #### Setup EKS Cluster
 
