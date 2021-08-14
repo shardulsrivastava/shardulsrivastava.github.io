@@ -10,11 +10,11 @@ comments: false
 ---
 
 Canary deployment is a way of deploying the application in a phased manner. In this pattern, we deploy a new version of the application alongside the production version, then rollout the change to a small subset of servers. 
-Once new version of application is tested by the real users, then rollout the change out to the rest of the servers.
+Once new version of the application is tested by the real users, then rollout the change out to the rest of the servers.
 
 Canary deployments can be complex and involve testing in production and manual verification.
 
-![canary-release](/assets/images/canary-release.png)
+![canary-release](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/qlo7w0fwc5iwyza1e36d.png)
 
 To demonstrate Canary deployments, we will setup an EKS cluster, install Istio, deploy sample application and setup canary release of new version of application.
 
@@ -30,10 +30,9 @@ Setup an EKS cluster of version `1.21` in `us-east-1` region with a managed node
    ```
    for Mac and other operating systems, follow the steps [here](https://eksctl.io/introduction/#installation).
 
-
 2. Create EKS cluster
    ```bash
-   eksctl create cluster --name dev-cluster \
+   eksctl create cluster --name canary-cluster \
           --version 1.21 \
           --region us-east-1 \
           --nodegroup-name default-pool \
@@ -49,9 +48,9 @@ Setup an EKS cluster of version `1.21` in `us-east-1` region with a managed node
    2021-08-13 23:59:52 [ℹ]  waiting for the control plane availability...
    2021-08-13 23:59:52 [✔]  saved kubeconfig as "/Users/shardulsrivastava/.kube/config"
    2021-08-13 23:59:52 [ℹ]  no tasks
-   2021-08-13 23:59:52 [✔]  all EKS cluster resources for "dev-cluster" have been created
+   2021-08-13 23:59:52 [✔]  all EKS cluster resources for "canary-cluster" have been created
    2021-08-14 00:01:57 [ℹ]  kubectl command should work with "/Users/shardulsrivastava/.kube/config", try 'kubectl get nodes'
-   2021-08-14 00:01:57 [✔]  EKS cluster "dev-cluster" in "ap-southeast-1" region is ready
+   2021-08-14 00:01:57 [✔]  EKS cluster "canary-cluster" in "us-east-1" region is ready
   ```
    Note: You would need a minimum of [these permissions](https://eksctl.io/usage/minimum-iam-policies/) to run the eksctl commands above.
 
@@ -70,7 +69,7 @@ Setup an EKS cluster of version `1.21` in `us-east-1` region with a managed node
 
    At this point, your cluster would have only the `core-dns`, `kube-proxy`, and `amazon-vpc-cni` plugins.
 
-   ![eks-cluster](/assets/images/eks-cluster.png)
+   ![eks-cluster](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4pb71izuokju0bvtyt5p.png)
 
 
 #### Setup Istio
@@ -100,12 +99,12 @@ Istio provides a convenient binary `istioctl` to set up and interact with Istio 
 
    Once installed, you should see the output like this for a successful installation.
 
-   ![istioctl-output](/assets/images/istioctl-output.png)
+   ![istioctl-output](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4wc5pk2vn1ura373qt5r.png)
 
 
    Note: If you get the below error, you should check the instance type you are using as there is a limit to the number of pods that can be scheduled on the node based on the node's instance type. See [here](https://github.com/awslabs/amazon-eks-ami/blob/master/files/eni-max-pods.txt) for the list of instance types and the max pods.
 
-   ![istioctl-error](/assets/images/istioctl-error.png)
+   ![istioctl-error](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/8xqhm7lhc7fsb8bzrkr7.png)
 
 3. Istio injects a [envoy proxy](https://github.com/envoyproxy/envoy) side-car container to the pods to intercept traffic from pods, this behavior is enabled using label `istio-injection=enabled` on the namespace level and `sidecar.istio.io/inject=true` on the pod level.
 
@@ -283,7 +282,7 @@ With Istio, traffic routing and replica deployment are totally independent of ea
          protocol: HTTP
    ```
 
-   ![istio-ingressgateway](/assets/images/istio-ingressgateway.png)
+   ![istio-ingressgateway](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/3ek9snqayacgiz0s5w14.png)
 
 3. [Destination Rule](https://istio.io/latest/docs/reference/config/networking/destination-rule/) allows you to define [subsets](https://istio.io/latest/docs/reference/config/networking/destination-rule/#Subset) of an application based on a set of labels. For example, we have deployed two subsets `v1` and `v2` of an application, and they are identified by the label `version`.
 
@@ -345,7 +344,7 @@ We can visualize the traffic flow using the Kiali dashboard:
 istioctl dashboard kiali
 ```
 
-![istio-canary-routing](/assets/images/istio-canary-routing.png)
+![istio-canary-routing](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/7yjm6y5gbcoyonzplrps.png)
 
 In production, after testing the `canary version` to ensure that it's working fine, we can update the VirtualService to route 100% of the traffic to this version and rollout the newer version for all the users.
 
