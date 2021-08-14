@@ -18,6 +18,8 @@ Canary deployments can be complex and involve testing in production and manual v
 
 To demonstrate Canary deployments, we will setup an EKS cluster, install Istio, deploy sample application and setup canary release of new version of application.
 
+you can follow the steps below or use the script [here](https://github.com/shardulsrivastava/eks-istio-canary/blob/main/auto/setup-cluster).
+
 #### Setup EKS Cluster
 
 Setup an EKS cluster of version `1.21` in `us-east-1` region with a managed node group `default-pool` of machine type `t3a-medium`. 
