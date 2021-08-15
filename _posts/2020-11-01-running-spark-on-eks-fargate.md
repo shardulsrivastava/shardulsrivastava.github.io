@@ -2,8 +2,8 @@
 layout: post
 title:  "Running Apache Spark on EKS Fargate"
 author: shardul
-categories: [ spark, kubernetes ]
-tags: [spark, kubernetes]
+categories: [ spark, kubernetes, eks, dataops ]
+tags: [spark, kubernetes, eks, dataops]
 image: assets/images/spark.jpg
 description: "Running Apache Spark on EKS Fargate"
 featured: true

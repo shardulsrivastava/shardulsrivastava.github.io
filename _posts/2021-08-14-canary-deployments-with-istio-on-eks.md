@@ -3,6 +3,7 @@ layout: post
 title:  "Canary Deployment with Istio on EKS"
 author: shardul
 tags: [istio, canary, kubernetes, eks]
+categories: [ istio, kubernetes, eks, canary ]
 image: assets/images/istio-eks.png
 description: "Canary Deployment with Istio on EKS"
 featured: true
