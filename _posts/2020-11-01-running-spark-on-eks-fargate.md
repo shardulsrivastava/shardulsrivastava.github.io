@@ -12,7 +12,7 @@ comments: false
 
 Apache Spark is one of the most famous Big Data frameworks that allows you to process data at any scale. 
 
-Spark jobs can run on the Kubernetes cluster and have native support for the Kubernetes scheduler from [release 3.1.1](https://spark.apache.org/releases/spark-release-3-1-1.html) onwards.
+Spark jobs can run on the Kubernetes cluster and have native support for the Kubernetes scheduler in GA from [release 3.1.1](https://spark.apache.org/releases/spark-release-3-1-1.html) onwards.
 
 Spark comes with a `spark-submit` script that allows submitting spark applications on a cluster using a single interface without the need to customize the script for different cluster managers.
 
@@ -155,3 +155,58 @@ The following diagram shows how different components interact and work together.
     ```
 
     ![spark-pi](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/soqlp8l157tkci21kry9.png)
+
+#### Managing SparkApplication with sparkctl
+
+`sparkctl` is CLI tool for creating, listing, checking status of, getting logs of, and deleting `SparkApplications` running on the Kubernetes cluster.
+
+1. Build `sparkctl` from source:
+   
+   ```bash
+   git clone git@github.com:GoogleCloudPlatform/spark-on-k8s-operator.git
+   cd spark-on-k8s-operator/sparkctl
+   go build -o /usr/local/bin/sparkctl
+   ```
+
+2. List SparkApplication objects in `spark` namespace:
+   
+   ```bash
+   sparkctl list -n spark
+   +----------+-----------+----------------+-----------------+
+   |   NAME   |   STATE   | SUBMISSION AGE | TERMINATION AGE |
+   +----------+-----------+----------------+-----------------+
+   | spark-pi | COMPLETED | 1h             | 1h              |
+   +----------+-----------+----------------+-----------------+
+   ```
+
+3. Check the status of SparkApplication `spark-pi` :
+   
+   ```bash
+   sparkctl status spark-pi -n spark
+
+    application state:
+    +-----------+----------------+----------------+-----------------+--------------------+--------------------+-------------------+
+    |   STATE   | SUBMISSION AGE | COMPLETION AGE |   DRIVER POD    |     DRIVER UI      | SUBMISSIONATTEMPTS | EXECUTIONATTEMPTS |
+    +-----------+----------------+----------------+-----------------+--------------------+--------------------+-------------------+
+    | COMPLETED | 1h             | 1h             | spark-pi-driver | 10.100.97.206:4040 |                  1 |                 1 |
+    +-----------+----------------+----------------+-----------------+--------------------+--------------------+-------------------+
+    executor state:
+    +----------------------------------+-----------+
+    |           EXECUTOR POD           |   STATE   |
+    +----------------------------------+-----------+
+    | spark-pi-418ac87b48d177c9-exec-1 | COMPLETED |
+    +----------------------------------+-----------+
+   ```
+
+4. Check SparkApplication `spark-pi` logs:
+   
+   ```bash
+   sparkctl log spark-pi -n spark 
+   ```
+5. Port-forward to Spark UI:
+
+   ```bash
+   sparkctl forward spark-pi -n spark
+   ```
+
+   you can access the Spark UI at http://localhost:4040
