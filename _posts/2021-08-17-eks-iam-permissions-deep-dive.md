@@ -4,8 +4,7 @@ title:  "EKS IAM Permissions Deep Dive"
 author: shardul
 tags: [eks, iam, serviceaccount, deepdive]
 categories: [eks, iam, serviceaccount, deepdive]
-image: assets/images/aws-
-eks-iam.png
+image: assets/images/aws-eks-iam.png
 description: "EKS IAM Permissions Deep Dive"
 featured: true
 comments: false
