@@ -33,9 +33,6 @@ availabilityZones:
 managedNodeGroups:
   - name: managed-ng-1
     instanceType: t3a.medium
-    minSize: 1
-    maxSize: 4
-    desiredCapacity: 4
 ```
 
 `eksctl` automatically creates an IAM role with minimum IAM permissions required for cluster to work and attaches it to the nodes part of the cluster. All the pods running on these nodes inherit these permissions.
@@ -133,3 +130,64 @@ managedNodeGroups:
 11. `cloudWatch` - IAM Policy `CloudWatchAgentServerPolicy` for [AWS Cloudwatch Agent](https://github.com/aws/amazon-cloudwatch-agent).
 
 
+While all the above options allow you to define IAM permissions for the node group, there is a problem with defining IAM permissions at the node level.
+
+![problem](/assets/images/problem-medium.jpeg)
+
+All the pods running on nodes part of the node group will have these permissions thus not adhering to the **principle of least privilege**. For example if we attach `EC2 Admin` and `Cloudformation` permissions to the node group to run `CI server`, any other pods running on this node group will effectively inherit these permissions.
+
+One way to overcome this problem is to create a separate node group for the CI server.( Use [taints](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#concepts) and [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity) to ensure only CI pods are deployed on this node group)
+
+However AWS access is not just required for CI server, different applications could use different AWS services such as `S3`, `SQS` and `KMS` and would require fine grained IAM permissions according to their usecase. Creating one node group for every such application would not be an ideal solution and can lead to **maintenance issues**, **higher cost** and **low resource consumption**.
+
+![solution](/assets/images/solution.jpeg)
+
+
+## IAM Roles for Service Accounts
+
+Amazon EKS supports `IAM Roles for Service Accounts (IRSA)` that allows us to map AWS IAM Roles to Kubernetes Service Accounts. With IRSA, instead of defining IAM permissions on the node, we can attach IAM role to a Kubernetes Service Account and attach the service account to the pod/deployment.
+
+IAM role is added to the Kubernetes service account by adding an annotation key `eks.amazonaws.com/role-arn` with value as the `IAM Role ARN`.
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-serviceaccount
+  annotations:
+    eks.amazonaws.com/role-arn: "<IAM Role ARN>"
+```
+
+EKS uses Mutating Admission Webhook [pod-identity-webhook]((https://github.com/aws/amazon-eks-pod-identity-webhook/)) to intercept the pod creation request and update the pod spec to incude IAM credentials.
+
+Check the [Mutating Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) in the cluster :
+
+```bash
+kubectl get mutatingwebhookconfigurations.admissionregistration.k8s.io
+
+NAME                                             WEBHOOKS   AGE
+0500-amazon-eks-fargate-mutation.amazonaws.com   2          21m
+pod-identity-webhook                             1          28m
+vpc-resource-mutating-webhook                    1          28m
+```
+
+`pod-identity-webhook` supports several configuation options:
+
+1. `eks.amazonaws.com/role-arn` - IAM Role ARN to attach to the service account.
+2. `eks.amazonaws.com/audience` - Intended autience of the [token](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection), defaults to "sts.amazonaws.com" if not set.
+3. `eks.amazonaws.com/sts-regional-endpoints` - AWS STS is a global services , however we can use regional STS endpoints to reduce latency. Set to `true` to use regional STS endpoints.
+4. `eks.amazonaws.com/token-expiration` - AWS STS Token expiration duration, default is `86400 seconds` or `24 hours`.
+5. `eks.amazonaws.com/skip-containers` - A comma separated list of containers to skip adding volume and environment variables.
+
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-serviceaccount
+  annotations:
+    eks.amazonaws.com/role-arn: "<IAM Role ARN>"
+    eks.amazonaws.com/audience: "sts.amazonaws.com"
+    eks.amazonaws.com/sts-regional-endpoints: "true"
+    eks.amazonaws.com/token-expiration: "86400"
+```
