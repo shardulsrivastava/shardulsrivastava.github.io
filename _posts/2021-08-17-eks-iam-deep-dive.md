@@ -1,11 +1,11 @@
 ---
 layout: post
-title:  "EKS IAM Permissions Deep Dive"
+title:  "EKS IAM Deep Dive"
 author: shardul
 tags: [eks, iam, serviceaccount, deepdive]
 categories: [eks, iam, serviceaccount, deepdive]
 image: assets/images/aws-eks-iam.png
-description: "EKS IAM Permissions Deep Dive"
+description: "EKS IAM Deep Dive"
 featured: true
 comments: false
 ---
@@ -191,3 +191,5 @@ metadata:
     eks.amazonaws.com/sts-regional-endpoints: "true"
     eks.amazonaws.com/token-expiration: "86400"
 ```
+
+### How it works 
