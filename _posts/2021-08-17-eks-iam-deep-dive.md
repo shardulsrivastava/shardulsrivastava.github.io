@@ -47,7 +47,7 @@ This role has 3 policies attached that give basic access to the node :
 2. `AmazonEC2ContainerRegistryReadOnly` - This policy gives read-only access to ECR.
 3. `AmazonEKS_CNI_Policy` - This policy is required for [amazon-vpc-cni](https://github.com/aws/amazon-vpc-cni-k8s#setup) plugin to function properly on nodes which is deployed as part of `aws-node` daemonset in `kube-system` namespace.
 
-These permissions may not be enough if you are running workloads that require various other IAM permissions. `eksctl` provides a number of ways to define additional permissions for the Node.
+These permissions may not be enough if you are running workloads that require various other IAM permissions. `eksctl` provides several ways to define additional permissions for the Node.
 
 
 ### Attach IAM Policies using ARN to the Node Group.
@@ -142,7 +142,7 @@ All the pods running on nodes part of the node group will have these permissions
 
 One way to overcome this problem is to create a separate node group for the CI server. ( Use [taints](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#concepts) and [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity) to ensure only CI pods are deployed on this node group)
 
-However AWS access is not just required for CI servers, many applications use AWS services such as `S3`, `SQS` and `KMS` and would require fine-grained IAM permissions. Creating one node group for every such application would not be an ideal solution and can lead to **maintenance issues**, **higher cost**, and **low resource consumption**.
+However AWS access is not just required for CI servers, many applications use AWS services such as `S3`, `SQS`, and `KMS` and would require fine-grained IAM permissions. Creating one node group for every such application would not be an ideal solution and can lead to **maintenance issues**, **higher cost**, and **low resource consumption**.
 
 ![solution](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/b1bzi3gm71dyrfkdfvji.jpeg)
 
@@ -238,7 +238,38 @@ Mutating Webhook also adds a projected volume for service account :
 
 a projected volume is created with the name `aws-iam-token` and mounted to the container at `/var/run/secrets/eks.amazonaws.com/serviceaccount`.
 
-Note:  If you are using a custom role created manually, then the role should have below `trust policy` to allow the pod to use this role :
+
+Let's test it out.
+
+1. Create an EKS cluster with a Managed NodeGroup and a IAM service account `s3-reader` in default namespace with `AmazonS3ReadOnlyAccess` IAM permissions :
+
+```yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: iam-cluster
+  region: us-east-1
+  version: "1.21"
+availabilityZones: 
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+iam:
+  withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: s3-reader
+    attachPolicyARNs:
+    - "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+managedNodeGroups:
+  - name: managed-ng-1
+    instanceType: t3a.medium
+    minSize: 1
+    maxSize: 4
+    desiredCapacity: 4
+```
+
+**Note:**  We can also attach IAM Role directly using `attachRoleARN`. However, the role should have below `trust policy` to allow the pods to use this role :
 
 ```json
 {
@@ -262,3 +293,120 @@ Note:  If you are using a custom role created manually, then the role should hav
  ]
 }
 ```
+
+2. Check the role created by `eksctl` for service account `s3-reader`
+
+```bash
+eksctl get iamserviceaccount s3-reader --cluster=iam-cluster --region=us-east-1
+2021-08-25 02:51:14 [ℹ]  eksctl version 0.61.0
+2021-08-25 02:51:14 [ℹ]  using region us-east-1
+NAMESPACE NAME    ROLE ARN
+default   s3-reader arn:aws:iam::129999085861:role/eksctl-iam-cluster-addon-iamserviceaccount-d-Role1-DT1W81BIIDA3
+```
+
+3. Check the service account to verify `eks.amazonaws.com/role-arn` annotation:
+
+```bash
+kubectl get sa s3-reader -oyaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::129999085861:role/eksctl-iam-cluster-addon-iamserviceaccount-d-Role1-DT1W81BIIDA3
+  labels:
+    app.kubernetes.io/managed-by: eksctl
+  name: s3-reader
+  namespace: default
+secrets:
+- name: s3-reader-token-5hnn7
+```
+
+we can see that `eksctl` has created the IAM role, service account and automatically added this annotation to the service account.
+
+Since `eksctl` doesn't support adding the rest of the annotations, let's add them manually:
+
+```bash
+kubectl annotate \
+  sa s3-reader \
+    "eks.amazonaws.com/audience=sts.amazonaws.com" \
+    "eks.amazonaws.com/token-expiration=43200" \
+    "eks.amazonaws.com/skip-containers=sidecar-busybox-container"
+```
+
+**Note:** As of August'21 these two annotations `eks.amazonaws.com/sts-regional-endpoints` and `eks.amazonaws.com/skip-containers` are not working in `EKS v1.21`.
+
+4. Create a pod to test the IAM permission on the pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iam-test
+spec:
+  serviceAccountName: s3-reader
+  containers:
+  - name: iam-test
+    image: amazon/aws-cli
+    args: [ "sts", "get-caller-identity" ]
+``` 
+
+```bash
+kubectl apply -f iam-test.yaml
+```
+
+5. Once the pod is ready, check the environment variables in the pod:
+
+```bash
+kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].env'
+```
+
+```json
+[
+  {
+    "name": "AWS_DEFAULT_REGION",
+    "value": "us-east-1"
+  },
+  {
+    "name": "AWS_REGION",
+    "value": "us-east-1"
+  },
+  {
+    "name": "AWS_ROLE_ARN",
+    "value": "<IAM ROLE ARN>"
+  },
+  {
+    "name": "AWS_WEB_IDENTITY_TOKEN_FILE",
+    "value": "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
+  }
+]
+```
+
+6. Check the `volumeMounts` in the pod:
+
+```bash
+kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].volumeMounts'
+```
+
+```json
+[
+  {
+    "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+    "name": "kube-api-access-xjjqv",
+    "readOnly": true
+  },
+  {
+    "mountPath": "/var/run/secrets/eks.amazonaws.com/serviceaccount",
+    "name": "aws-iam-token",
+    "readOnly": true
+  }
+]
+```
+
+7. Check the `volumes` in the container:
+
+```bash
+kubectl get pods iam-test -ojson|jq -r '.spec.volumes'
+```
+
+
+
