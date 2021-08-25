@@ -241,7 +241,7 @@ a projected volume is created with the name `aws-iam-token` and mounted to the c
 
 Let's test it out.
 
-1. Create an EKS cluster with a Managed NodeGroup and a IAM service account `s3-reader` in default namespace with `AmazonS3ReadOnlyAccess` IAM permissions :
+* Create an EKS cluster with a Managed NodeGroup and a IAM service account `s3-reader` in default namespace with `AmazonS3ReadOnlyAccess` IAM permissions :
 
 ```yaml
 apiVersion: eksctl.io/v1alpha5
@@ -294,7 +294,7 @@ managedNodeGroups:
 }
 ```
 
-2. Check the role created by `eksctl` for service account `s3-reader`
+* Check the role created by `eksctl` for service account `s3-reader`
 
 ```bash
 eksctl get iamserviceaccount s3-reader --cluster=iam-cluster --region=us-east-1
@@ -304,7 +304,7 @@ NAMESPACE NAME    ROLE ARN
 default   s3-reader arn:aws:iam::129999085861:role/eksctl-iam-cluster-addon-iamserviceaccount-d-Role1-DT1W81BIIDA3
 ```
 
-3. Check the service account to verify `eks.amazonaws.com/role-arn` annotation:
+* Check the service account to verify `eks.amazonaws.com/role-arn` annotation:
 
 ```bash
 kubectl get sa s3-reader -oyaml
@@ -335,7 +335,7 @@ kubectl annotate \
 
 **Note:** As of August'21 these two annotations `eks.amazonaws.com/sts-regional-endpoints` and `eks.amazonaws.com/skip-containers` are not working in `EKS v1.21`.
 
-4. Create a pod to test the IAM permission on the pod
+* Create a pod to test the IAM permission on the pod
 
 ```yaml
 apiVersion: v1
@@ -354,7 +354,7 @@ spec:
 kubectl apply -f iam-test.yaml
 ```
 
-5. Once the pod is ready, check the environment variables in the pod:
+* Once the pod is ready, check the environment variables in the pod:
 
 ```bash
 kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].env'
@@ -381,7 +381,7 @@ kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].env'
 ]
 ```
 
-6. Check the `volumeMounts` in the pod:
+* Check the `volumeMounts` in the pod:
 
 ```bash
 kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].volumeMounts'
@@ -402,7 +402,7 @@ kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].volumeMounts'
 ]
 ```
 
-7. Check the `volumes` in the container:
+* Check the `volumes` in the container:
 
 ```bash
 kubectl get pods iam-test -ojson|jq -r '.spec.volumes'
