@@ -86,7 +86,7 @@ managedNodeGroups:
   - name: managed-ng-1
     iam:
       instanceProfileARN: "<Instance Profile ARN>"
-      instanceRoleARN: "<Instance Role ARN>"
+      instanceRoleARN: "<IAM Role ARN>"
 ```
 
 ### Attach Addons IAM Policy
@@ -239,7 +239,7 @@ Mutating Webhook also adds a projected volume for service account :
 a projected volume is created with the name `aws-iam-token` and mounted to the container at `/var/run/secrets/eks.amazonaws.com/serviceaccount`.
 
 
-Let's test it out.
+**Let's test it out.**
 
 * Create an EKS cluster with a Managed NodeGroup and a IAM service account `s3-reader` in default namespace with `AmazonS3ReadOnlyAccess` IAM permissions :
 
@@ -278,15 +278,15 @@ managedNodeGroups:
   {
    "Effect": "Allow",
    "Principal": {
-    "Federated": "arn:aws:iam::<AWS_ACCOUNT_ID>:oidc-provider/oidc.REGION.eks.amazonaws.com/CLUSTER_ID"
+    "Federated": "arn:aws:iam::<AWS_ACCOUNT_ID>:oidc-provider/oidc.<REGION>.eks.amazonaws.com/<CLUSTER_ID>"
    },
    "Action": "sts:AssumeRoleWithWebIdentity",
    "Condition": {
     "StringEquals": {
-     "oidc.REGION.eks.amazonaws.com/CLUSTER_ID:sub": "system:serviceaccount:default:my-serviceaccount"
+     "oidc.<REGION>.eks.amazonaws.com/<CLUSTER_ID>:sub": "system:serviceaccount:default:my-serviceaccount"
     },
     "StringLike": {
-     "oidc.REGION.eks.amazonaws.com/CLUSTER_ID:sub": "system:serviceaccount:default:*"
+     "oidc.<REGION>.eks.amazonaws.com/<CLUSTER_ID>:sub": "system:serviceaccount:default:*"
     }
    }
   }
@@ -301,18 +301,21 @@ eksctl get iamserviceaccount s3-reader --cluster=iam-cluster --region=us-east-1
 2021-08-25 02:51:14 [ℹ]  eksctl version 0.61.0
 2021-08-25 02:51:14 [ℹ]  using region us-east-1
 NAMESPACE NAME    ROLE ARN
-default   s3-reader arn:aws:iam::129999085861:role/eksctl-iam-cluster-addon-iamserviceaccount-d-Role1-DT1W81BIIDA3
+default   s3-reader <IAM ROLE ARN>
 ```
 
 * Check the service account to verify `eks.amazonaws.com/role-arn` annotation:
 
 ```bash
 kubectl get sa s3-reader -oyaml
+```
+
+```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::129999085861:role/eksctl-iam-cluster-addon-iamserviceaccount-d-Role1-DT1W81BIIDA3
+    eks.amazonaws.com/role-arn: <IAM ROLE ARN>
   labels:
     app.kubernetes.io/managed-by: eksctl
   name: s3-reader
@@ -323,19 +326,53 @@ secrets:
 
 we can see that `eksctl` has created the IAM role, service account and automatically added this annotation to the service account.
 
-Since `eksctl` doesn't support adding the rest of the annotations, let's add them manually:
+Since `eksctl` doesn't support all of the annotations, let's add them manually:
 
 ```bash
 kubectl annotate \
   sa s3-reader \
-    "eks.amazonaws.com/audience=sts.amazonaws.com" \
+    "eks.amazonaws.com/audience=test" \
     "eks.amazonaws.com/token-expiration=43200" \
-    "eks.amazonaws.com/skip-containers=sidecar-busybox-container"
+    "eks.amazonaws.com/audience=test"
 ```
 
 **Note:** As of August'21 these two annotations `eks.amazonaws.com/sts-regional-endpoints` and `eks.amazonaws.com/skip-containers` are not working in `EKS v1.21`.
 
-* Create a pod to test the IAM permission on the pod
+By default audience is set to `sts.amazonaws.com`. To allow a different value for `audience`:
+
+* Go to [IAM Console](https://console.aws.amazon.com/iamv2/home) and click on `Indentity Providers`, add the audience to the Identity provider :
+
+![oidc-audience](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/1dwuj8anj8r01yrc8495.png)
+
+* Modify the trust policy of the IAM Role used with the service account to add add this `audience` :
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::<AWS_ACCOUNT_ID>:oidc-provider/oidc.eks.<REGION>.amazonaws.com/id/<CLUSTER_ID>"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.<REGION>.amazonaws.com/id/<CLUSTER_ID>:sub": "system:serviceaccount:default:s3-reader"
+        },
+        "ForAnyValue:StringNotEquals" : {
+            "oidc.eks.<REGION>.amazonaws.com/id/<CLUSTER_ID>:aud": [
+                "sts.amazonaws.com",
+                "test"
+            ]
+        }
+      }
+    }
+  ]
+}
+```
+
+* Create a pod to test the IAM permissions on the pod
 
 ```yaml
 apiVersion: v1
@@ -381,6 +418,32 @@ kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].env'
 ]
 ```
 
+* Check the `aws-iam-token volume` in the pod:
+
+```bash
+kubectl get pods iam-test -ojson|jq -r '.spec.volumes[]| select(.name=="aws-iam-token")'
+```
+
+```json
+{
+  "name": "aws-iam-token",
+  "projected": {
+    "defaultMode": 420,
+    "sources": [
+      {
+        "serviceAccountToken": {
+          "audience": "sts.amazonaws.com",
+          "expirationSeconds": 43200,
+          "path": "token"
+        }
+      }
+    ]
+  }
+}
+```
+
+we can see that `expirationSeconds` is `43200` as specified in the annotation `eks.amazonaws.com/token-expiration`.
+
 * Check the `volumeMounts` in the pod:
 
 ```bash
@@ -401,12 +464,5 @@ kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].volumeMounts'
   }
 ]
 ```
-
-* Check the `volumes` in the container:
-
-```bash
-kubectl get pods iam-test -ojson|jq -r '.spec.volumes'
-```
-
 
 
