@@ -18,7 +18,7 @@ IAM permissions in EKS can be defined in two ways:
 
 
 ## IAM Role for NodeGroups
-Whenever we create an EKS cluster using `eksctl` with node groups like the below configuration :
+Whenever we create an EKS cluster using `eksctl` with node groups like below :
 
 ```yaml
 apiVersion: eksctl.io/v1alpha5
@@ -39,9 +39,9 @@ managedNodeGroups:
     instanceType: t3a.medium
 ```
 
-`eksctl` automatically creates an IAM role with minimum IAM permissions required for the cluster to work and attaches it to the nodes part of the cluster. All the pods running on these nodes inherit these permissions.
+`eksctl` automatically creates an IAM role with minimum IAM permissions required for the cluster to work and attaches it to the nodes part of the nodegroup. All the pods running on these nodes inherit these permissions.
 
-This role has 3 policies attached that give basic access to the node :
+This role has 3 IAM policies attached that gives basic access to the node :
 
 1. `AmazonEKSWorkerNodePolicy` - This policy allows EKS worker nodes to connect to EKS clusters.
 2. `AmazonEC2ContainerRegistryReadOnly` - This policy gives read-only access to ECR.
@@ -162,9 +162,9 @@ metadata:
     eks.amazonaws.com/role-arn: "<IAM Role ARN>"
 ```
 
-EKS uses Mutating Admission Webhook [pod-identity-webhook](https://github.com/aws/amazon-eks-pod-identity-webhook/)) to intercept the pod creation request and update the pod spec to include IAM credentials.
+EKS create a Mutating Admission Webhook [pod-identity-webhook](https://github.com/aws/amazon-eks-pod-identity-webhook/) and uses it to intercept the pod creation request and update the pod spec to include IAM credentials.
 
-Check the [Mutating Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) in the cluster :
+Check the [Mutating Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) in the cluster:
 
 ```bash
 kubectl get mutatingwebhookconfigurations.admissionregistration.k8s.io
@@ -198,9 +198,9 @@ metadata:
 
 ### How IRSA Works
 
-When you define the IAM role for a service account using `eks.amazonaws.com/role-arn` annotation and add this service account to the pod, mutating webhook mutates the pod spec additional `environment variables` and [projected mount volumes](https://kubernetes.io/docs/concepts/storage/volumes/#projected).
+When you define the IAM role for a service account using `eks.amazonaws.com/role-arn` annotation and add this service account to the pod, `pod-identity-webhook` mutates the pod spec to add `environment variables` and [projected mount volumes](https://kubernetes.io/docs/concepts/storage/volumes/#projected).
 
-These are the environment variables by the webhook in the pod spec :
+These are the environment variables added by `pod-identity-webhook` in the pod spec:
 
 ```yaml
   env:
@@ -220,7 +220,7 @@ These are the environment variables by the webhook in the pod spec :
 
 3. `AWS_WEB_IDENTITY_TOKEN_FILE` - Path to the tokens file
 
-Mutating Webhook also adds a projected volume for service account :
+`pod-identity-webhook` also adds a projected volume for service account token:
 
 ```yaml
     volumeMounts:
@@ -241,7 +241,7 @@ a projected volume is created with the name `aws-iam-token` and mounted to the c
 
 **Let's test it out.**
 
-* Create an EKS cluster with a Managed NodeGroup and a IAM service account `s3-reader` in default namespace with `AmazonS3ReadOnlyAccess` IAM permissions :
+* Create an EKS cluster with a Managed NodeGroup and an IAM service account `s3-reader` in the default namespace with `AmazonS3ReadOnlyAccess` IAM permissions :
 
 ```yaml
 apiVersion: eksctl.io/v1alpha5
@@ -286,7 +286,7 @@ managedNodeGroups:
      "oidc.<REGION>.eks.amazonaws.com/<CLUSTER_ID>:sub": "system:serviceaccount:default:my-serviceaccount"
     },
     "StringLike": {
-     "oidc.<REGION>.eks.amazonaws.com/<CLUSTER_ID>:sub": "system:serviceaccount:default:*"
+     "oidc.<REGION>.eks.amazonaws.com/CLUSTER_ID:sub": "system:serviceaccount:default:*"
     }
    }
   }
@@ -324,27 +324,27 @@ secrets:
 - name: s3-reader-token-5hnn7
 ```
 
-we can see that `eksctl` has created the IAM role, service account and automatically added this annotation to the service account.
+we can see that `eksctl` has created the IAM role, service account and automatically added the annotation to the service account.
 
-Since `eksctl` doesn't support all of the annotations, let's add them manually:
+* Since `eksctl` doesn't support all the annotations, let's add them manually:
 
 ```bash
 kubectl annotate \
   sa s3-reader \
     "eks.amazonaws.com/audience=test" \
-    "eks.amazonaws.com/token-expiration=43200" \
-    "eks.amazonaws.com/audience=test"
+    "eks.amazonaws.com/token-expiration=43200"
 ```
 
-**Note:** As of August'21 these two annotations `eks.amazonaws.com/sts-regional-endpoints` and `eks.amazonaws.com/skip-containers` are not working in `EKS v1.21`.
+**Note:** As of August'21 these two annotations `eks.amazonaws.com/sts-regional-endpoints` and `eks.amazonaws.com/skip-containers` are not working with `EKS v1.21`.
 
-By default audience is set to `sts.amazonaws.com`. To allow a different value for `audience`:
 
-* Go to [IAM Console](https://console.aws.amazon.com/iamv2/home) and click on `Indentity Providers`, add the audience to the Identity provider :
+By default `eks.amazonaws.com/audience` is set to `sts.amazonaws.com` if not specified. To allow a different value for `audience`, we have to add the audience in the `OIDC Provider` and update the `trust policy` of the IAM Role to add this audience.
+
+*  Go to [IAM Console](https://console.aws.amazon.com/iamv2/home), click on `Indentity Providers` and add the audience to the `OIDC Identity provider`:
 
 ![oidc-audience](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/1dwuj8anj8r01yrc8495.png)
 
-* Modify the trust policy of the IAM Role used with the service account to add add this `audience` :
+* Modify the trust policy of the IAM Role used with the service account to add this `audience` :
 
 ```json
 {
@@ -360,19 +360,14 @@ By default audience is set to `sts.amazonaws.com`. To allow a different value fo
         "StringEquals": {
           "oidc.eks.<REGION>.amazonaws.com/id/<CLUSTER_ID>:sub": "system:serviceaccount:default:s3-reader"
         },
-        "ForAnyValue:StringNotEquals" : {
-            "oidc.eks.<REGION>.amazonaws.com/id/<CLUSTER_ID>:aud": [
-                "sts.amazonaws.com",
-                "test"
-            ]
-        }
+        "oidc.eks.us-east-1.amazonaws.com/id/<CLUSTER_ID>:aud": "test"
       }
     }
   ]
 }
 ```
 
-* Create a pod to test the IAM permissions on the pod
+* Create a pod to test the IAM permissions:
 
 ```yaml
 apiVersion: v1
@@ -432,7 +427,7 @@ kubectl get pods iam-test -ojson|jq -r '.spec.volumes[]| select(.name=="aws-iam-
     "sources": [
       {
         "serviceAccountToken": {
-          "audience": "sts.amazonaws.com",
+          "audience": "test",
           "expirationSeconds": 43200,
           "path": "token"
         }
@@ -465,4 +460,8 @@ kubectl get pods iam-test -ojson|jq -r '.spec.containers[0].volumeMounts'
 ]
 ```
 
+* Check the logs of the pod `iam-test` to see the role assumed by the pod:
 
+```bash
+kubectl logs iam-test
+```
