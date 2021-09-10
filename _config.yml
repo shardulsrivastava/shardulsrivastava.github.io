@@ -44,11 +44,14 @@ paginate: 6
 paginate_path: /page:num/
     
 # Other
-markdown: kramdown
+# markdown: kramdown
+markdown: GFM
 
 kramdown:
   input: GFM
   syntax_highlighter: rouge
+  #syntax_highlighter: coderay
+  #extensions: ["tables", "strikethrough", "superscript", "with_toc_data"]
   syntax_highlighter_opts:
     block:
       line_numbers: true
