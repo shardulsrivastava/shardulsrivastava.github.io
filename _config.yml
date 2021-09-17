@@ -5,7 +5,7 @@ description: "Multi Cloud and Big Data Technologies"
 logo: 'assets/images/logo1.png'
 favicon: 'assets/images/logo.png'
 baseurl: ''
-google_analytics: 'UA-46278016-1'
+google_analytics: 'G-PNEQ8HXLQ6'
 disqus: 'demowebsite'
 mailchimp-list: 'https://wowthemes.us11.list-manage.com/subscribe/post?u=8aeb20a530e124561927d3bd8&amp;id=8c3d2d214b'
 include: ["_pages"]
