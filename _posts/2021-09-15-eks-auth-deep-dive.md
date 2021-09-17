@@ -4,7 +4,7 @@ title:  EKS Auth Deep Dive
 author: shardul
 tags: [eks, monitoring, aws, auth]
 categories: [eks, monitoring, aws, auth]
-image: assets/images/eks-auth-blog.png
+image: https://dev-to-uploads.s3.amazonaws.com/uploads/articles/jbemhazm86o66bkuixyf.png
 description: "EKS Auth Deep Dive"
 featured: true
 comments: false
