@@ -4,28 +4,55 @@ title:  EKS Auth Deep Dive
 author: shardul
 tags: [eks, monitoring, aws, auth]
 categories: [eks, monitoring, aws, auth]
+image: assets/images/eks-auth-blog.png
 description: "EKS Auth Deep Dive"
-featured: false
+featured: true
 comments: false
 ---
 
-AWS EKS uses `IAM credentials` for `authentication` and `Kubernetes RBAC` for `authorization`. When you create an EKS cluster, the IAM Role or User is that was used to create the cluster is added to the `system:masters` group by default.
+If you use EKS then you have found youself in a situation where a user can't access the cluster despite having all the IAM permissions and gets `Unauthorized` message like [Eddie](https://friends.fandom.com/wiki/Eddie_Menuek) here.
 
-As per [Kubernetes documentation](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles) `system:masters` group is one of the default ClusterRoleBindings available in the Kubernetes cluster, it's attached to the `cluster-admin` ClusterRole that gives the user admin permissions in the cluster.
+![eddie-locked](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/hpykbg9lncvvkmduyp9b.jpeg)
 
+AWS EKS uses `IAM credentials` for `authentication` and `Kubernetes RBAC` for `authorization`. As per [EKS docs](https://docs.aws.amazon.com/eks/latest/userguide/managing-auth.html):
+> `EKS uses IAM permissions for authentication of valid entities such IAM users or roles. All the permissions for interacting with EKS cluster is managed through Kubernetes RBAC`
+
+or simply put, EKS doesn't work the same way as other services such as S3 where if you have `AmazonS3FullAccess`, you can access any S3 bucket and create or delete files/folders. In EKS, IAM permissions are only used to check if user has valid IAM credentials and permissions to run any command using `kubectl` such as `kubectl get pods` is managed by Kubernetes API that uses [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) to control the access.
+
+
+![aws-eks-auth](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/q70jx5gnhh9s4wrj27jc.png)
+
+By default, the `IAM Role` or `IAM User` that was used to create the cluster, is added to the `system:masters` group and gets cluster wide admin permission with `cluster-admin` ClusterRole.
+
+As per [Kubernetes documentation](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles) `system:masters` group is one of the `default` ClusterRoleBindings available in the Kubernetes cluster, it's attached to the `cluster-admin` ClusterRole that gives the user admin permissions in the cluster.
+
+<style>
+table {
+  font-family: Merriweather;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
 
 | Default ClusterRole | Default ClusterRoleBinding | Description |
 |---------------------|----------------------------|-------------|
 | cluster-admin       | system:masters  group      | Allows super-user access to perform any action on any resource.|
+<br>
+
+![unlimited-power](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/f1hm3xhl2kugcp747tid.jpeg)
 
 **Note:** This mapping of creator IAM User or Role to `system:masters` group is not visible in any configuration such as `aws-auth` configmap.
 
-
-## aws-auth ConfigMap
-
 EKS allows giving access to other users by adding them in a configmap `aws-auth` in `kube-system` namespace. By default, this configmap is empty. However, If you are using `eksctl` to create the cluster, this config map will have the role created by `eksctl` for the node group and this role is attached to the `system:bootstrappers` and `system:nodes` groups.
 
-`aws-auth` configmap is based on [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) configuration and has several options:
+
+`aws-auth` configmap is based on [aws-iam-authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator) and has several configuration options:
 
 1. **mapRoles**
 2. **mapUsers**
@@ -37,9 +64,9 @@ EKS allows giving access to other users by adding them in a configmap `aws-auth`
 
 `mapRoles` has three attributes:
  
-1. **roleARN** - IAM Role ARN to map to this cluster.
+1. **rolearn** - IAM Role ARN to map to EKS cluster.
 2. **username** - Username for the IAM Role to map in Kubernetes, this could be a static value like `eks-developer` or `ci-account` or a templated variable like `{{AccountID}}/{{SessionName}}/{{EC2PrivateDNSName}}` or both. This value would be printed in the `aws-authenticator` Cloudwatch logs if enabled. 
-3. **groups** - Kubernetes group that is defined in `ClusterRoleBinding/RoleBinding`. Example
+3. **groups** - List of Kubernetes group that is defined in `ClusterRoleBinding/RoleBinding`. Example
 
   ```yaml
   subjects:
@@ -103,12 +130,13 @@ By default, only IAM Role that created the cluster would have access to the clus
 
 ```bash
 kubectl get pods
+
 error: You must be logged in to the server (Unauthorized)
 ```
 
 As expected, this `eks-developer` would not be allowed access. To allow access, let's add the mapping in the `aws-auth` configmap and map this role to `eks-developer` user with `groups` empty. We can either directly edit the configmap or use `eksctl`.
 
-```yaml
+```bash
 eksctl create iamidentitymapping \
   --cluster iam-auth-cluster \
   --region us-east-1 \
@@ -149,10 +177,10 @@ Error from server (Forbidden): pods is forbidden: User "eks-developer" cannot li
 
 This time, we can access the cluster, however not allowed to list pods in the cluster due to not having enough RBAC permissions. RBAC permissions can be assigned to this IAM role in two ways :
 
-1. RBAC permissions with User
-2. RBAC permissions with Group
+1. RBAC permissions with Kubernetes User
+2. RBAC permissions with Kubernetes Group
 
-### RBAC permissions with User
+### RBAC permissions with Kubernetes User
 
 We can assign RBAC permissions to an IAM role by binding mapped Kubernetes User in `aws-auth` i.e `eks-developer` to a `ClusterRole`/`Role`.
 
@@ -206,9 +234,9 @@ We can also verify the access granted to the users by checking the `authenticato
 
 > ```time="2021-09-13T16:29:14Z" level=info msg="access granted" arn="arn:aws:iam::01755xxxxx:role/eks-developer" client="127.0.0.1:50410" groups="[]" method=POST path=/authenticate sts=sts.us-east-1.amazonaws.com uid="heptio-authenticator-aws:01755xxxxx:AROAQIFUWO66PDOXKSLMQ" username=eks-developer```
 
-### RBAC permissions with Group
+### RBAC permissions with Kubernetes Group
 
-While assigning permissions directly to the Kubernetes User works just fine for most of the use-cases however this approach is not so great if you want to audit who is assuming the IAM role and accessing the cluster and would like additional information captured in audit logs.
+While assigning permissions directly to the Kubernetes User works just fine for most of the use-cases however this approach is not so great if you want to audit who is assuming the IAM role and accessing the cluster and would like additional information captured in the audit logs.
 
 One such use-case is AWS SSO, where many users are assigned the same permission sets and whenever these users log in using their credentials, they assume the same IAM role.
 
@@ -334,5 +362,59 @@ Now we would get the `AWS Account ID` along with `Session Name` in cloudwatch lo
 
 ## Using mapUser to Map an IAM User to the Cluster
 
+`mapUsers` allows mapping an `IAM User` to the cluster and add the user to one or more Kubernetes Groups. It has 3 attributes :
 
-`mapUsers` allows mapping an `IAM User` to the cluster and add the user to one or more Kubernetes Groups. 
+1. **userarn** - ARN of IAM User to map to EKS cluster. This could be IAM user from the same AWS account or another account.
+2. **username** - Static username to map this IAM User to, in Kubernetes.
+3. **groups** - List of Kubernetes group that is defined in `ClusterRoleBinding/RoleBinding`.
+
+
+To add an IAM user with ARN `arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user` in `aws-auth` configmap, we can run the command below :
+
+```bash
+eksctl create iamidentitymapping \
+  --cluster iam-auth-cluster \
+  --region us-east-1 \
+  --arn "arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user" \
+  --username "dev-user"
+```
+
+this command would add these lines in `aws-auth` configMap:
+
+```yaml
+  mapUsers: |
+    - userarn: arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user
+      username: dev-user
+```
+
+Since we didn't specify any group, `dev-user` would be able to authenticate to the cluster, however wouldn't be able `list` or `get` any resources.
+
+For users mapped using `mapUsers`, RBAC permission can be given in two ways :
+
+1. RBAC permissions with Kubernetes User
+2. RBAC permissions with Kubernetes Group
+
+### RBAC permissions with Kubernetes User
+
+We can assign RBAC permissions to an IAM user by binding mapped Kubernetes User in `aws-auth` i.e `dev-user` to a `ClusterRole`/`Role`.
+
+Let's create a `ClusterRoleBinding` to bind Kubernetes user `dev-user` to the `developer-cluster-role`:
+
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRoleBinding
+    metadata:
+      name: dev-user-cluster-role-binding
+    subjects:
+      - kind: User
+        name: dev-user # Kubernetes User mapped to the IAM user in aws-auth configmap.
+        apiGroup: ""
+    roleRef:
+      kind: ClusterRole
+      name: eks-developer-cluster-role
+      apiGroup: ""
+    ```
+
+Once this `ClusterRoleBinding` is created, IAM user `dev-user` would be able to get,list or watch pods in any namespace.
+
+### RBAC permissions with Kubernetes Group
