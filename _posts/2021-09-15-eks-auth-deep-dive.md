@@ -368,7 +368,6 @@ Now we would get the `AWS Account ID` along with `Session Name` in cloudwatch lo
 2. **username** - Static username to map this IAM User to, in Kubernetes.
 3. **groups** - List of Kubernetes group that is defined in `ClusterRoleBinding/RoleBinding`.
 
-
 To add an IAM user with ARN `arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user` in `aws-auth` configmap, we can run the command below :
 
 ```bash
@@ -398,7 +397,7 @@ For users mapped using `mapUsers`, RBAC permission can be given in two ways :
 
 We can assign RBAC permissions to an IAM user by binding mapped Kubernetes User in `aws-auth` i.e `dev-user` to a `ClusterRole`/`Role`.
 
-Let's create a `ClusterRoleBinding` to bind Kubernetes user `dev-user` to the `developer-cluster-role`:
+1. Create a `ClusterRoleBinding` to bind Kubernetes user `dev-user` to the `developer-cluster-role`:
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -415,6 +414,72 @@ Let's create a `ClusterRoleBinding` to bind Kubernetes user `dev-user` to the `d
       apiGroup: ""
     ```
 
-Once this `ClusterRoleBinding` is created, IAM user `dev-user` would be able to get,list or watch pods in any namespace.
+2. Map IAM user `arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user` to Kubernetes user `dev-user` in `aws-auth` configMap:
+
+  ```bash
+  eksctl create iamidentitymapping \
+    --cluster iam-auth-cluster \
+    --region us-east-1 \
+    --arn "arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user" \
+    --username "dev-user"
+  ```
+
+Once this `ClusterRoleBinding` is created and IAM user is mapped in `aws-auth`, IAM user `dev-user` would be able to get,list or watch pods in any namespace.
 
 ### RBAC permissions with Kubernetes Group
+
+If we need to  give same set of permissions to multiple users, then instead of creating multiple `ClusterRoleBindings`, we can use Kubernetes Groups and attach that group to the users for whom those permissions are required.
+
+
+1. Create a ClusterRoleBinding to bind Kubernetes Group `developer` to cluster role `eks-developer-cluster-role`:
+
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRoleBinding
+    metadata:
+      name: dev-user-group-cluster-role-binding
+    subjects:
+      - kind: Group
+        name: dev
+        apiGroup: ""
+    roleRef:
+      kind: ClusterRole
+      name: eks-developer-cluster-role
+      apiGroup: ""
+    ```
+
+2. Map IAM user `arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user` to Kubernetes user `dev-user` with `dev` group in `aws-auth` configMap:
+
+    ```bash
+    eksctl create iamidentitymapping \
+      --cluster iam-auth-cluster \
+      --region us-east-1 \
+      --arn "arn:aws:iam::<AWS_ACCOUNT_ID>:role/dev-user" \
+      --username "dev-user" \
+      --group "developer"
+    ```
+
+    this would create an entry under `mapRoles` section in `aws-auth` configmap as:
+
+    ```yaml
+    mapUsers: |
+      - groups:
+        - dev
+        userarn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/dev-user
+        username: dev-user
+    ```
+
+## Using mapAccounts to Map IAM ARN in an AWS Account to the Cluster
+
+`mapAccounts` allows mapping all the  `IAM Users` or `IAM Roles` of an account to the cluster. It accepts the list of AWS Account IDs:
+
+```yaml
+mapAccounts: |
+  - "<AWS_ACCOUNT_ID_1>"
+  - "<AWS_ACCOUNT_ID_2>"
+```
+
+After mapping the AWS accounts to the cluster, we can use Kubernetes User and Kubernetes Group to assign permissions to those IAM entities.
+
+
+
