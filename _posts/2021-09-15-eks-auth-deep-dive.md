@@ -43,6 +43,7 @@ td, th {
 | Default ClusterRole | Default ClusterRoleBinding | Description |
 |---------------------|----------------------------|-------------|
 | cluster-admin       | system:masters  group      | Allows super-user access to perform any action on any resource.|
+
 <br>
 
 ![unlimited-power](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/f1hm3xhl2kugcp747tid.jpeg)
