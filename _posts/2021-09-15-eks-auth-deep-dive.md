@@ -66,7 +66,7 @@ EKS allows giving access to other users by adding them in a configmap `aws-auth`
 `mapRoles` has three attributes:
  
 1. **rolearn** - IAM Role ARN to map to EKS cluster.
-2. **username** - Username for the IAM Role to map in Kubernetes, this could be a static value like `eks-developer` or `ci-account` or a templated variable like {% raw %}`{{AccountID}}/{{SessionName}}/{{EC2PrivateDNSName}}`{% endraw %} or both. This value would be printed in the `aws-authenticator` Cloudwatch logs if enabled. 
+2. **username** - Username for the IAM Role to map in Kubernetes, this could be a static value like `eks-developer` or `ci-account` or a templated variable like {% raw %}`{{AccountID}}/{{SessionName}}/{{EC2PrivateDNSName}}`{% endraw %} or both. This value would be printed in the `aws-authenticator` Cloudwatch logs if logging is enabled. 
 3. **groups** - List of Kubernetes groups that are defined in `ClusterRoleBinding/RoleBinding`. Example
 
   ```yaml
@@ -135,7 +135,7 @@ kubectl get pods
 error: You must be logged in to the server (Unauthorized)
 ```
 
-As expected, `eks-developer` IAM role would not be allowed access. To allow `eks-developer` IAM role access to the cluster, add the mapping in the `aws-auth` configmap and map this role to `eks-developer` user with `groups` empty. We can either directly edit the configMap or use `eksctl`.
+As expected, `eks-developer` IAM role would not be allowed access. To allow `eks-developer` IAM role access to the cluster, add the mapping in the `aws-auth` configMap to map this role to `eks-developer` Kubernetes user. We can either directly edit the configMap or use `eksctl` to add this mapping:
 
 ```bash
 eksctl create iamidentitymapping \
@@ -159,8 +159,6 @@ data:
 
     - rolearn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/eks-developer
       username: eks-developer
-  mapUsers: |
-    []
 kind: ConfigMap
 metadata:
   name: aws-auth
