@@ -349,7 +349,7 @@ eksctl create iamidentitymapping \
       --cluster "iam-auth-cluster" \
       --region "us-east-1" \
       --arn "arn:aws:iam::<AWS_ACCOUNT_ID>:role/eks-developer" \
-      --username "{% raw %}aws:{{AccountID}}:eks-developer:{{SessionName}}{% raw %}n" \
+      --username "{% raw %}aws:{{AccountID}}:eks-developer:{{SessionName}}{% endraw %}n" \
       --group "developer"
 ```
 
@@ -357,7 +357,7 @@ Now we would get the `AWS Account ID` along with `Session Name` in cloudwatch lo
 
 > ```time="2021-09-14T18:26:33Z" level=info msg="access granted" arn="arn:aws:iam::017558828988:role/eks-developer" client="127.0.0.1:39752" groups="[developer]" method=POST path=/authenticate sts=sts.us-east-1.amazonaws.com uid="heptio-authenticator-aws:0175XXXXXXXX:AROAQIFUWO66PDOXKSLMQ" username="aws:0175XXXXXXXX:eks-developer:my-develper-session-123456789"```
 
-**Note: {% raw %}If you want session name in raw format, you can use templated variable `{{SessionNameRaw}}` instead. However as of EKS 1.21, these two variables `{{AccessKeyID}}` and `{{SessionNameRaw}}`{% endraw %} don't work.**
+**Note: If you want session name in raw format, you can use templated variable {% raw %}`{{SessionNameRaw}}` instead. However as of EKS 1.21, these two variables `{{AccessKeyID}}` and `{{SessionNameRaw}}`{% endraw %} don't work.**
 
 
 ## Using mapUser to Map an IAM User to the Cluster
