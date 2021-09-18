@@ -368,7 +368,7 @@ Now we would get the `AWS Account ID` along with `Session Name` in cloudwatch lo
 2. **username** - Static username to map this IAM User to, in Kubernetes. 
 3. **groups** - List of Kubernetes groups that are defined in `ClusterRoleBinding/RoleBinding`.
 
-** Note: Templated variables are not supported in `username` field with mapUser.**
+**Note: Templated variables are not supported in `username` field with mapUser.**
 
 To add an IAM user with ARN `arn:aws:iam::<AWS_ACCOUNT_ID>:user/dev-user` in `aws-auth` configmap, we can run the below command:
 
