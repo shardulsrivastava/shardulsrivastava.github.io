@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "EKS IAM Deep Dive"
+canonical_url: https://dev.to/aws-builders/eks-iam-deep-dive-136d
 author: shardul
 tags: [eks, iam, serviceaccount, deepdive]
 categories: [eks, iam, serviceaccount, deepdive]

@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Running Apache Spark on EKS Fargate"
+canonical_url: https://dev.to/aws-builders/running-apache-spark-on-eks-fargate-1l55
 author: shardul
 categories: [ spark, kubernetes, eks, dataops ]
 tags: [spark, kubernetes, eks, dataops]

@@ -43,6 +43,8 @@ jekyll-archives:
 paginate: 6
 paginate_path: /page:num/
 
+highlighter: rouge
+
 # Other
 markdown: kramdown
 # markdown: GFM
@@ -53,8 +55,10 @@ markdown: kramdown
 
 kramdown:
   input: GFM
-  syntax_highlighter: rouge
+  # syntax_highlighter: rouge
   syntax_highlighter_opts:
+    default_lang: html
+    css_class: 'highlight'
     block:
       line_numbers: false
 

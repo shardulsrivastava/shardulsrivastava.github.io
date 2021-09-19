@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Canary Deployment with Istio on EKS"
+canonical_url: https://dev.to/aws-builders/canary-deployment-with-istio-on-eks-2m98
 author: shardul
 tags: [istio, canary, kubernetes, eks]
 categories: [ istio, kubernetes, eks, canary ]

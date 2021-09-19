@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Cloud Native Chaos Engineering with Chaos Mesh"
+canonical_url: https://dev.to/aws-builders/cloud-native-chaos-engineering-with-chaos-mesh-3a96
 author: shardul
 tags: [chaosengineering, kubernetes]
 categories: [ chaosengineering, kubernetes, eks, chaosmesh ]

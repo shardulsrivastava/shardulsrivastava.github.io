@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  EKS Auth Deep Dive
+canonical_url: https://dev.to/aws-builders/eks-auth-deep-dive-4fib
 author: shardul
 tags: [eks, monitoring, aws, auth]
 categories: [eks, monitoring, aws, auth]
