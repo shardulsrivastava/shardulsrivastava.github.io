@@ -17,4 +17,8 @@ group :jekyll_plugins do
     gem 'jekyll-archives'
     gem 'kramdown'
     gem 'rouge'
+
 end
+
+gem "kramdown-syntax-coderay", "~> 1.0"
+gem "redcarpet"

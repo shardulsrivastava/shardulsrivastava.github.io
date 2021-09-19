@@ -42,19 +42,21 @@ jekyll-archives:
 # Pagination 
 paginate: 6
 paginate_path: /page:num/
-    
+
 # Other
 markdown: kramdown
 # markdown: GFM
 
+# These are not working
+# redcarpet:
+#     extensions: ["fenced_code_blocks","no_intra_emphasis", "tables", "autolink", "strikethrough", "with_toc_data"]
+
 kramdown:
   input: GFM
   syntax_highlighter: rouge
-  #syntax_highlighter: coderay
-  #extensions: ["tables", "strikethrough", "superscript", "with_toc_data"]
   syntax_highlighter_opts:
     block:
-      line_numbers: true
+      line_numbers: false
 
 # Adsense (change to "enabled" to activate, also your client id and ad slot. Create a new ad unit from your Adsense account to get the slot.)
 adsense: "enabled"

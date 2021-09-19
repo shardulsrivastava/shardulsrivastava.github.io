@@ -349,7 +349,7 @@ eksctl create iamidentitymapping \
       --cluster "iam-auth-cluster" \
       --region "us-east-1" \
       --arn "arn:aws:iam::<AWS_ACCOUNT_ID>:role/eks-developer" \
-      --username "{% raw %}aws:{{AccountID}}:eks-developer:{{SessionName}}{% endraw %}n" \
+      --username "{% raw %}aws:{{AccountID}}:eks-developer:{{SessionName}}{% endraw %}" \
       --group "developer"
 ```
 
