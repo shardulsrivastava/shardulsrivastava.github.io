@@ -22,3 +22,5 @@ end
 
 gem "kramdown-syntax-coderay", "~> 1.0"
 gem "redcarpet"
+
+gem "webrick", "~> 1.7"
