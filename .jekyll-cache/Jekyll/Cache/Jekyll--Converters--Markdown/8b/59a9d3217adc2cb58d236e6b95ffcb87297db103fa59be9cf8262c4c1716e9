@@ -1,0 +1,6 @@
+I"Æ<p>Kubernetes has become a de-factor standard because it takes care of a lot of complexity internally. One of those complexities is cluster autoscaling that is provisioning of nodes based on increased number of workloads.</p>
+
+<p><a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Cluster Autoscaler</a> is a project maintained by a community called <code class="language-html highlighter-rouge">sig-autoscaling</code>, one of the communities under <code class="language-html highlighter-rouge">Kubernetes</code>. Check out <a href="https://github.com/kubernetes/community">here</a> to find more about this and other commmunities under Kubernetes.</p>
+
+<p>Cluster autoscaler</p>
+:ET

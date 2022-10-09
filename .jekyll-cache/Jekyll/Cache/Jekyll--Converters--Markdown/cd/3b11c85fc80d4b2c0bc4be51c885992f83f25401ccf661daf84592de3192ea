@@ -1,0 +1,195 @@
+I"“&<h1 class="posttitle">CKA Labs</h1>
+<p><br /><br /></p>
+
+<table class="table table-hover">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col" style="width: 5%;">#</th>
+      <th scope="col" style="width: 47.5%;">Lab Name</th>
+      <th scope="col" style="width: 47.5%;">Lab Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">1</th>
+      <td>Practice Test - PODs</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-for-beginners-pods-new')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">2</th>
+      <td>Practice Test - ReplicaSets</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-for-beginners-replicasets-new-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">3</th>
+      <td>Practice Test - Deployments</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-for-beginners-deployments-new-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">4</th>
+      <td>Practice Test - Namespaces</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-namespaces-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">5</th>
+      <td>Practice Test - Services</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-for-beginners-services-new-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">6</th>
+      <td>Practice Test - Imperative Commands</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-imperative-2-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">7</th>
+      <td>Practice Test - Manual Scheduling</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-scheduler-manual')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">8</th>
+      <td>Practice Test - Labels and Selectors</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-labels-selectors-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">9</th>
+      <td>Practice Test - Taints and Tolerations</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-taints-tolerations-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">10</th>
+      <td>Practice Test - Node Affinity</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-node-affinity-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">11</th>
+      <td>Practice Test - Resource Limits</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-resource-limits-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">12</th>
+      <td>Practice Test - DaemonSets</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-scheduler-daemonset')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">13</th>
+      <td>Practice Test - Static PODs</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-scheduler-staticpods')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">14</th>
+      <td>Practice Test - Multiple Schedulers</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-scheduler-multiple')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">15</th>
+      <td>Practice Test - Monitor Cluster Components</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-monitoring-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">16</th>
+      <td>Practice Test - Managing Application Logging</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-ckad-logging-1-19')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">17</th>
+      <td>Practice Test - Lightning Lab 1</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-lightning-lab-1')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">18</th>
+      <td>Practice Test - Mock Exam 1</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-exam-1')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">19</th>
+      <td>Practice Test - Mock Exam 2</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-exam-2')">Click Here to start the lab</a></td>
+    </tr>
+    <tr>
+      <th scope="row">20</th>
+      <td>Practice Test - Mock Exam 3</td>
+      <td><a class="btn-md btn" onclick="startLab('kubernetes-cka-exam-3')">Click Here to start the lab</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="lecture-attachment lecture-attachment-type-code_embed" id="lecture-attachment-19704776">
+  <div class="attachment-data"></div>
+  <div id="complete-continune">
+    <a class="nav-btn complete" data-cpl-tooltip="You must complete all lecture material before progressing." href="" role="button" id="lecture_complete_button" data-loading-url="">
+      <span class="nav-text">Complete and continue</span>
+      &nbsp;
+      <i class="fa fa-arrow-right" aria-hidden="true"></i>
+    </a>&lt;/br&gt;
+  </div>
+  <div id="kk_scenario">
+      <!-- <div id="start-lab-button" style="text-align: center; margin-top: 200px;"></div> -->
+  </div>
+</div>
+
+<!-- <div class="lecture-attachment lecture-attachment-type-code_embed" id="lecture-attachment-19704776">
+    <div class="attachment-data"></div>
+    
+      <div id="kk_scenario" name="kubernetes-ckad-network-policies">
+    
+        <div id="start-lab-button" style="text-align: center; margin-top: 200px;">
+            <a class="btn-md" onclick="startLab()">Click Here to start the lab</a><br><br>
+        </div>
+    </div>
+</div> -->
+
+<script>
+    $(document).ready(function(){
+      $('#complete-continune').hide();
+    });
+    var scenario_div_name = '#kk_scenario';
+    
+    var startLab = function(scenario_name){
+        
+      $('#complete-continune').show();
+        //var scenario_name = $(scenario_div_name).attr('name')
+        var lab_name = $('#kk_scenario').attr("lab")
+        var data_katacoda_command = "";
+        if(lab_name){
+            data_katacoda_command="export SCENARIO_NAME=" + lab_name + ";";
+        }
+        
+        https://katacoda.com/embed/mmumshad2/kubernetes-ckad-network-policies/?v=2&embed=true&ui=inline&host=kodekloud.com&url=https%3A%2F%2Fkodekloud.com%2Fcourses%2F539883%2Flectures%2F9816676&target=katacoda-scenario-1&nonce=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWJlZCI6dHJ1ZSwiZG9tYWluIjoiaHR0cHM6Ly9rb2Rla2xvdWQuY29tL2NvdXJzZXMvNTM5ODgzL2xlY3R1cmVzLzk4MTY2NzYiLCJpcCI6IjIwMDE6ZTY4OjU0MTQ6M2M5ODpiNWFiOmZhZGQ6YTFlNDozNWZmIiwiaWF0IjoxNjA4NDM1OTc3LCJleHAiOjE2MDg0MzYwMDd9.QEQMxsmO2EaKsP2oPGptB6_kWWdBq2D_33qulvP5QZc&token=TuTDT3aiTL&userid=RQdUf0XpRU0udqTmImuhLiQ8dZXpxWZb3BkmhT7Y7h9yNQ20QBg&color=004d7f&hideintro=false&externalcss=https%3A%2F%2Fres.cloudinary.com%2Fcloudusthad%2Fraw%2Fupload%2Fv1571161480%2Fcustom.css
+        var div_source_code = '<div id="katacoda-scenario-1" data-katacoda-host="kodekloud.com" data-katacoda-url="https://kodekloud.com/courses/539883/lectures/9816676&target=katacoda-scenario-1" data-katacoda-userid="RQdUf0XpRU0udqTmImuhLiQ8dZXpxWZb3BkmhT7Y7h9yNQ20QBg" data-katacoda-token="TuTDT3aiTL" data-katacoda-command="' + data_katacoda_command + '" data-katacoda-hideintro="false" data-katacoda-id="mmumshad2/' + scenario_name + '" data-katacoda-externalcss="https://res.cloudinary.com/cloudusthad/raw/upload/v1571161480/custom.css" data-katacoda-color="004d7f" style="height: 90vh;">';
+        // Generated code would be 
+        // "<div id="katacoda-scenario-1" data-katacoda-userid="RQdUf0XpRU0udqTmImuhLiQ8dZXpxWZb3BkmhT7Y7h9yNQ20QBg" data-katacoda-token="TuTDT3aiTL" data-katacoda-command="" data-katacoda-hideintro="false" data-katacoda-id="mmumshad2/kubernetes-ckad-network-policies" data-katacoda-externalcss="https://res.cloudinary.com/cloudusthad/raw/upload/v1571161480/custom.css" data-katacoda-color="004d7f" style="height: 90vh;">"
+        $(scenario_div_name).append(div_source_code);    
+        var embed_script = document.createElement('script');
+        embed_script.setAttribute('src','https://katacoda.com/embed.js?cache=sdfsdf');
+        
+        if($(scenario_div_name + ' script').length == 0){
+            $(scenario_div_name).append(embed_script);
+        }
+    
+        
+        
+        // $.post( window.location.pathname + "/complete", function() {
+        //   console.log("lecture completed")
+        // })
+        //   .done(function() {
+        //     console.log("lecture done")
+        //   })
+        //   .fail(function() {
+        //     console.log("lecture complete failed")
+        //   })
+        //   .always(function() {
+        //     console.log("lecture complete finished")
+        //   });
+        
+        
+    }
+    
+    var div_button_source_code = '<div id="start-lab-button" style="text-align: center; margin-top: 200px;"><a class="btn btn-md btn-primary" onclick="startLab()" >Click Here to start the lab</a><br><br><a href="https://support.kodekloud.com/troubleshooting-labs" target="_blank">Click here for Lab troubleshooting guide</a></div>';
+    
+    var message_code = '<div id="announcement-1" class="announcement__desc center_custom">What has changed? <br> We have identified a usage pattern where labs are opened accidentally by users while browsing through the course curriculum without the intention of opening the labs. The above button was added to prevent that. Nothing has changed. You may continue to access labs as many times as you want. Simply click on the above button to start the lab.</div>'
+    
+    // $(scenario_div_name).append(div_button_source_code);  
+    // $(scenario_div_name).append(message_code);  
+</script>
+
+:ET

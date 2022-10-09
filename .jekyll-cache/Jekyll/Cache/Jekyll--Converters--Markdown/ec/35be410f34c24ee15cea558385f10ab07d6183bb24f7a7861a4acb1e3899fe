@@ -1,0 +1,135 @@
+I"c1<p>Kubernetes has become a de-factor standard because it takes care of a lot of complexities internally. One of those complexities is cluster autoscaling that is provisioning of nodes based on increased number of workloads.</p>
+
+<p><a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Cluster Autoscaler</a> is a project maintained by a community called <code class="language-html highlighter-rouge">sig-autoscaling</code>, one of the communities under <code class="language-html highlighter-rouge">Kubernetes</code>. Check out more about Kubernetes Communities <a href="https://github.com/kubernetes/community">here</a>.</p>
+
+<p>Cluster autoscaler supports a number of <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider">cloud providers</a> including EKS. <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws">here</a> is the guide to setup cluster autoscaler on EKS and various configuration <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws/examples">examples</a>.</p>
+
+<p>Cluster autoscaler runs in the cluster as an addon and adds or removes the nodes in the cluster to allow scheduling of workloads. It kicks in when any of the pods is not able to schedule due to insufficient resources. Node groups in EKS are backed by <code class="language-html highlighter-rouge">EC2 Auto Scaling Groups</code> and CA updates the number of node in the ASG based on scale up or down. It also supports Mixed Instance policies for Spot instances that allowing users to save cost with Spot instances with the added risk of workload interruption.</p>
+
+<p>While CA takes care of scaling efficiently, there are still issues that EKS users face such as :</p>
+
+<ol>
+  <li>When there are no instances in the Node group of matching requirements for the workload to be scheduled. It prints these messages in the logs:
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pod didn<span class="s1">'t trigger scale-up (it wouldn'</span>t fit <span class="k">if </span>a new node is added<span class="o">)</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Using too big instances in node groups, leading to low resources utilization hence incurring increase cost.</p>
+  </li>
+  <li>
+    <p>Using too low instances in Node groups, leading to node groups maxing out and resulting into unscheduled pods.</p>
+  </li>
+  <li>No way to identify the optimal choice instance types based on workloads.</li>
+</ol>
+
+<p>All of these issues and many more can be solved with…</p>
+
+<p><img src="/assets/images/karpenter.jpeg" alt="karpenter" /></p>
+
+<h2 id="karpenter">Karpenter</h2>
+
+<p><a href="https://karpenter.sh/">Karpenter</a> is an open source project by AWS that improves the efficiency and cost of running workloads on Kubernetes clusters. It’s group less i.e it works by provisioning nodes based on the workload and the nodes provisioned are not part of any ASG.</p>
+
+<p>This allows Karpenter to scale nodes more efficiently and retry in a few miliseconds when node capacity is not available instead of waiting for minutes in case of an ASG and gives the flexibility to provision Instances from a variety of instance types without creating hundreds of node groups.</p>
+
+<h2 id="karpenter-installation">Karpenter Installation</h2>
+
+<p>Karpenter runs as a controller in the form of a deployment in the cluster and relies on a CRD called <a href="https://karpenter.sh/v0.17.0/provisioner/">Provisioner</a> for determine how to handle workloads such as consolidate them to save costs, move them to another node with a different instance type to save cost and  scale down nodes when they are empty.</p>
+
+<h3 id="setup-an-eks-cluster-with-karpenter-enabled">Setup an EKS Cluster with Karpenter enabled</h3>
+
+<p>Karpenter can be installed by following the steps in the <a href="https://karpenter.sh/v0.17.0/getting-started/getting-started-with-eksctl/">Getting Started Guide</a> which involved creating several Cloudformation stacks, IAM role cluster bindings. however simplest way to get started is to use <code class="language-html highlighter-rouge">eksctl</code> that supports out of box <code class="language-html highlighter-rouge">karpenter</code> installation.</p>
+
+<p>Let’s create a cluster with <code class="language-html highlighter-rouge">eksctl</code> with a managed node group and <code class="language-html highlighter-rouge">karpenter</code> installed:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">eksctl.io/v1alpha5</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterConfig</span>
+
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">karpenter-cluster</span>
+  <span class="na">region</span><span class="pi">:</span> <span class="s">eu-west-1</span>
+  <span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1.22"</span>
+  <span class="na">tags</span><span class="pi">:</span>
+    <span class="na">karpenter.sh/discovery</span><span class="pi">:</span> <span class="s">karpenter-cluster</span> <span class="c1"># Special tag for Karpenter</span>
+<span class="na">iam</span><span class="pi">:</span>
+  <span class="na">withOIDC</span><span class="pi">:</span> <span class="no">true</span> <span class="c1"># required</span>
+
+<span class="na">karpenter</span><span class="pi">:</span>
+  <span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">0.15.0'</span>
+  <span class="na">createServiceAccount</span><span class="pi">:</span> <span class="no">true</span> 
+
+<span class="na">managedNodeGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">managed-ng-1</span>
+    <span class="na">minSize</span><span class="pi">:</span> <span class="m">1</span>
+    <span class="na">maxSize</span><span class="pi">:</span> <span class="m">10</span>
+    <span class="na">desiredCapacity</span><span class="pi">:</span> <span class="m">1</span>
+    <span class="na">instanceType</span><span class="pi">:</span> <span class="s">t3.large</span>
+    <span class="na">amiFamily</span><span class="pi">:</span> <span class="s">AmazonLinux2</span>
+</code></pre></div></div>
+
+<p>this would create a cluster <code class="language-html highlighter-rouge">karpenter-cluster</code> in <code class="language-html highlighter-rouge">eu-west-1</code> region with a managed Node group <code class="language-html highlighter-rouge">managed-ng-1</code> and couple of components for <code class="language-html highlighter-rouge">karpenter</code> to work:</p>
+
+<ol>
+  <li><code class="language-html highlighter-rouge">eksctl-KarpenterControllerPolicy-karpenter-cluster</code> - An <a href="https://github.com/aws/karpenter/blob/30a4a5af24fb065471c9ec1203db861d9eb45ac4/website/content/en/v0.15.0/getting-started/getting-started-with-eksctl/cloudformation.yaml#L34-L66">IAM policy</a> with permissions to provision nodes and spot instances.</li>
+  <li><code class="language-html highlighter-rouge">eksctl-karpenter-cluster-iamservice-role</code> - An IAM role with IAM policy <code class="language-html highlighter-rouge">eksctl-KarpenterControllerPolicy-karpenter-cluster</code> and attached to the service account used by karpenter to allow it to provision instances.</li>
+  <li><code class="language-html highlighter-rouge">eksctl-KarpenterNodeRole-karpenter-cluster</code> - An <a href="https://github.com/aws/karpenter/blob/30a4a5af24fb065471c9ec1203db861d9eb45ac4/website/content/en/v0.15.0/getting-started/getting-started-with-eksctl/cloudformation.yaml#L15-L33">IAM role</a> for provisioned nodes to work and get registered with the cluster.</li>
+  <li><code class="language-html highlighter-rouge">eksctl-KarpenterNodeInstanceProfile-karpenter-cluster</code> - An <a href="https://github.com/aws/karpenter/blob/30a4a5af24fb065471c9ec1203db861d9eb45ac4/website/content/en/v0.15.0/getting-started/getting-started-with-eksctl/cloudformation.yaml#L8-L14">Instance profile</a> for instance provisioned by Karpenter.</li>
+  <li><code class="language-html highlighter-rouge">karpenter Helm Release</code> - Installation of karpenter using <a href="https://github.com/aws/karpenter/tree/main/charts/karpenter">Helm chart</a>.</li>
+</ol>
+
+<p>Now we have <code class="language-html highlighter-rouge">karpenter</code> installed in the cluster.</p>
+
+<h3 id="setup-karenter-provisioner">Setup Karenter Provisioner</h3>
+
+<p>To configure Karpenter, you need to create a <a href="https://karpenter.sh/v0.17.0/provisioner/">Provisioner</a> resource that defines how Karpenter provisions nodes and deletes them. Karpenter has a number of configurations. Let’s start with the minimal Provisioner :</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">karpenter.sh/v1alpha5</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Provisioner</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">provider</span><span class="pi">:</span>
+    <span class="na">subnetSelector</span><span class="pi">:</span>
+      <span class="na">karpenter.sh/discovery</span><span class="pi">:</span> <span class="s">karpenter-cluster</span>
+    <span class="na">securityGroupSelector</span><span class="pi">:</span>
+      <span class="na">karpenter.sh/discovery</span><span class="pi">:</span> <span class="s">karpenter-cluster</span>
+</code></pre></div></div>
+
+<p>Here <code class="language-html highlighter-rouge">subnetSelector</code> and <code class="language-html highlighter-rouge">securityGroupSelector</code> values allow karpenter to discover subnets and security groups i.e karpenter would discover the subnets and security groups using these tags and create the node in one of these subnets and attach the discovered security groups to the node.</p>
+
+<p>Let’s create a sample <code class="language-html highlighter-rouge">Nginx</code> deployment with CPU request as <code class="language-html highlighter-rouge">1</code></p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cat <span class="nt">&lt;</span><span class="err">&lt;</span><span class="na">EOF</span> <span class="err">|</span> <span class="na">kubectl</span> <span class="na">apply</span> <span class="na">-f</span> <span class="na">-</span>
+<span class="na">apiVersion:</span> <span class="na">apps</span><span class="err">/</span><span class="na">v1</span>
+<span class="na">kind:</span> <span class="na">Deployment</span>
+<span class="na">metadata:</span>
+  <span class="na">labels:</span>
+    <span class="na">app:</span> <span class="na">nginx</span>
+  <span class="na">name:</span> <span class="na">nginx</span>
+<span class="na">spec:</span>
+  <span class="na">replicas:</span> <span class="err">1</span>
+  <span class="na">selector:</span>
+    <span class="na">matchLabels:</span>
+      <span class="na">app:</span> <span class="na">nginx</span>
+  <span class="na">template:</span>
+    <span class="na">metadata:</span>
+      <span class="na">labels:</span>
+        <span class="na">app:</span> <span class="na">nginx</span>
+    <span class="na">spec:</span>
+      <span class="na">containers:</span>
+      <span class="na">-</span> <span class="na">image:</span> <span class="na">quay.io</span><span class="err">/</span><span class="na">shardul</span><span class="err">/</span><span class="na">nginx:v1</span>
+        <span class="na">name:</span> <span class="na">nginx</span>
+        <span class="na">imagePullPolicy:</span> <span class="na">Always</span>
+        <span class="na">resources:</span>
+          <span class="na">requests:</span>
+            <span class="na">cpu:</span> <span class="err">1</span>
+<span class="na">EOF</span>
+</code></pre></div></div>
+
+<p>Check if pods are running :</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get pods
+</code></pre></div></div>
+<p><img src="/assets/images/karpenter-ca-pending-pods.jpeg" alt="pending pods" /></p>
+
+:ET

@@ -1,0 +1,2 @@
+I"Õ<p>Amazon EKS cluster consists of <a href="https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html">Managed NodeGroups</a>, <a href="https://docs.aws.amazon.com/eks/latest/userguide/worker.html">Self Managed NodeGroups</a> and <a href="https://docs.aws.amazon.com/eks/latest/userguide/fargate-profile.html">Fargate profiles</a>. NodeGroups are autoscaling groups behind the scene, while Fargate is serverless and creates one fargate node per pod.</p>
+:ET

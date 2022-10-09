@@ -1,0 +1,470 @@
+I"�<p>Amazon EKS cluster consists of <a href="https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html">Managed NodeGroups</a>, <a href="https://docs.aws.amazon.com/eks/latest/userguide/worker.html">Self Managed NodeGroups</a> and <a href="https://docs.aws.amazon.com/eks/latest/userguide/fargate-profile.html">Fargate profiles</a>. NodeGroups are autoscaling groups behind the scene, while Fargate is serverless and creates one fargate node per pod.</p>
+
+<p>IAM permissions in EKS can be defined in two ways:</p>
+<ol>
+  <li>IAM Role for NodeGroups</li>
+  <li>IAM role for Service Accounts(IRSA)</li>
+</ol>
+
+<h2 id="iam-role-for-nodegroups">IAM Role for NodeGroups</h2>
+<p>Whenever we create an EKS cluster using <code class="language-html highlighter-rouge">eksctl</code> with node groups like below :</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">eksctl.io/v1alpha5</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterConfig</span>
+
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">monitoring-cluster</span>
+  <span class="na">region</span><span class="pi">:</span> <span class="s">us-east-1</span>
+  <span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1.21"</span>
+
+<span class="na">availabilityZones</span><span class="pi">:</span> 
+  <span class="pi">-</span> <span class="s">us-east-1a</span>
+  <span class="pi">-</span> <span class="s">us-east-1b</span>
+  <span class="pi">-</span> <span class="s">us-east-1c</span>
+
+<span class="na">managedNodeGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">managed-ng-1</span>
+    <span class="na">instanceType</span><span class="pi">:</span> <span class="s">t3a.medium</span>
+</code></pre></div></div>
+
+<p><code class="language-html highlighter-rouge">eksctl</code> automatically creates an IAM role with minimum IAM permissions required for the cluster to work and attaches it to the nodes part of the nodegroup. All the pods running on these nodes inherit these permissions.</p>
+
+<p>This role has 3 IAM policies attached that gives basic access to the node :</p>
+
+<ol>
+  <li><code class="language-html highlighter-rouge">AmazonEKSWorkerNodePolicy</code> - This policy allows EKS worker nodes to connect to EKS clusters.</li>
+  <li><code class="language-html highlighter-rouge">AmazonEC2ContainerRegistryReadOnly</code> - This policy gives read-only access to ECR.</li>
+  <li><code class="language-html highlighter-rouge">AmazonEKS_CNI_Policy</code> - This policy is required for <a href="https://github.com/aws/amazon-vpc-cni-k8s#setup">amazon-vpc-cni</a> plugin to function properly on nodes which is deployed as part of <code class="language-html highlighter-rouge">aws-node</code> daemonset in <code class="language-html highlighter-rouge">kube-system</code> namespace.</li>
+</ol>
+
+<p>These permissions may not be enough if you are running workloads that require various other IAM permissions. <code class="language-html highlighter-rouge">eksctl</code> provides several ways to define additional permissions for the Node.</p>
+
+<h3 id="attach-iam-policies-using-arn-to-the-node-group">Attach IAM Policies using ARN to the Node Group.</h3>
+
+<p><code class="language-html highlighter-rouge">eksctl</code> allows you to attach IAM policies to a node group using <code class="language-html highlighter-rouge">attachPolicyARNs</code>.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">managedNodeGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">managed-ng-1</span>
+    <span class="na">iam</span><span class="pi">:</span>
+      <span class="na">attachPolicyARNs</span><span class="pi">:</span>
+      <span class="c1"># Mandatory IAM Policies for NodeGroup.</span>
+      <span class="pi">-</span> <span class="s">arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy</span>
+      <span class="pi">-</span> <span class="s">arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy</span>
+      <span class="pi">-</span> <span class="s">arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly</span>
+
+      <span class="c1"># AWS Managed or Customer Managed IAM Policy ARN.</span>
+      <span class="pi">-</span> <span class="s">arn:aws:iam::aws:policy/AmazonS3FullAccess</span>
+</code></pre></div></div>
+
+<p>Please note that while specifying IAM policy ARNs using <code class="language-html highlighter-rouge">attachPolicyARNs</code>, it’s mandatory to include the above 3 IAM policies as they are required for the node to function properly.</p>
+
+<p>If you missed specifying these 3 IAM policies, you will get an error like this :</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AWS::EKS::Nodegroup/ManagedNodeGroup: CREATE_FAILED – <span class="s2">"The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policies [arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy, arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly] are attached "</span>
+</code></pre></div></div>
+
+<h3 id="attach-iam-role-and-instance-profile-to-the-node-group">Attach IAM Role and Instance Profile to the Node Group</h3>
+
+<p>If you have an existing <code class="language-html highlighter-rouge">IAM Role</code> and <code class="language-html highlighter-rouge">Instance Profile</code>, then you can define that for a node group :</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">managedNodeGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">managed-ng-1</span>
+    <span class="na">iam</span><span class="pi">:</span>
+      <span class="na">instanceProfileARN</span><span class="pi">:</span> <span class="s2">"</span><span class="s">&lt;Instance</span><span class="nv"> </span><span class="s">Profile</span><span class="nv"> </span><span class="s">ARN&gt;"</span>
+      <span class="na">instanceRoleARN</span><span class="pi">:</span> <span class="s2">"</span><span class="s">&lt;IAM</span><span class="nv"> </span><span class="s">Role</span><span class="nv"> </span><span class="s">ARN&gt;"</span>
+</code></pre></div></div>
+
+<h3 id="attach-addons-iam-policy">Attach Addons IAM Policy</h3>
+
+<p><code class="language-html highlighter-rouge">eksctl</code> provides out-of-box IAM policies for the cluster add-ons such as <code class="language-html highlighter-rouge">cluster autoscaler</code>, <code class="language-html highlighter-rouge">external DNS</code>, <code class="language-html highlighter-rouge">cert-manager</code>.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">managedNodeGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">managed-ng-1</span>
+    <span class="na">iam</span><span class="pi">:</span>
+      <span class="na">withAddonPolicies</span><span class="pi">:</span>
+        <span class="na">imageBuilder</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">autoScaler</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">externalDNS</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">certManager</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">appMesh</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">ebs</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">fsx</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">efs</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">albIngress</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">xRay</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">cloudWatch</span><span class="pi">:</span> <span class="no">true</span>
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p><code class="language-html highlighter-rouge">imageBuilder</code> - Full ECR access with <code class="language-html highlighter-rouge">AmazonEC2ContainerRegistryPowerUser</code>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">autoScaler</code> - IAM policy for <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws#iam-policy">Cluster Autoscaler</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">externalDNS</code> - IAM policy for <a href="https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/aws.md#iam-policy">External DNS</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">certManager</code> - IAM Policy for <a href="https://cert-manager.io/docs/configuration/acme/dns01/route53/#set-up-an-iam-role">Cert Manager</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">appMesh</code> - IAM policy for <a href="https://github.com/aws/aws-app-mesh-controller-for-k8s/blob/master/config/iam/controller-iam-policy.json">AWS App Mesh</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">ebs</code> - IAM Policy for <a href="https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/docs/example-iam-policy.json">AWS EBS CSI Driver</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">fsx</code> - IAM Policy for <a href="https://github.com/kubernetes-sigs/aws-fsx-csi-driver/tree/master/docs#installation">AWS FSX Lustre</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">efs</code> - IAM Policy for <a href="https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/docs/iam-policy-example.json">AWS EFS CSI Driver</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">albIngress</code> - IAM Policy for <a href="https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/install/iam_policy.json">ALB Ingress Controller</a>.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">xRay</code> - IAM Policy <code class="language-html highlighter-rouge">AWSXRayDaemonWriteAccess</code> for <a href="https://github.com/aws/aws-xray-daemon">AWS X-ray Daemon</a></p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">cloudWatch</code> - IAM Policy <code class="language-html highlighter-rouge">CloudWatchAgentServerPolicy</code> for <a href="https://github.com/aws/amazon-cloudwatch-agent">AWS Cloudwatch Agent</a>.</p>
+  </li>
+</ol>
+
+<p>While all the above options allow you to define IAM permissions for the node group, there is a problem with defining IAM permissions at the node level.</p>
+
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ot1yz308b4adguc5wcme.jpeg" alt="problem" /></p>
+
+<p>All the pods running on nodes part of the node group will have these permissions thus not adhering to the <strong>principle of least privilege</strong>. For example, if we attach <code class="language-html highlighter-rouge">EC2 Admin</code> and <code class="language-html highlighter-rouge">Cloudformation</code> permissions to the node group to run <code class="language-html highlighter-rouge">CI server</code>, any other pods running on this node group will effectively inherit these permissions.</p>
+
+<p>One way to overcome this problem is to create a separate node group for the CI server. ( Use <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#concepts">taints</a> and <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity">affinity</a> to ensure only CI pods are deployed on this node group)</p>
+
+<p>However AWS access is not just required for CI servers, many applications use AWS services such as <code class="language-html highlighter-rouge">S3</code>, <code class="language-html highlighter-rouge">SQS</code>, and <code class="language-html highlighter-rouge">KMS</code> and would require fine-grained IAM permissions. Creating one node group for every such application would not be an ideal solution and can lead to <strong>maintenance issues</strong>, <strong>higher cost</strong>, and <strong>low resource consumption</strong>.</p>
+
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/b1bzi3gm71dyrfkdfvji.jpeg" alt="solution" /></p>
+
+<h2 id="iam-roles-for-service-accounts">IAM Roles for Service Accounts</h2>
+
+<p>Amazon EKS supports <code class="language-html highlighter-rouge">IAM Roles for Service Accounts (IRSA)</code> that allows us to map AWS IAM Roles to Kubernetes Service Accounts. With IRSA, instead of defining IAM permissions on the node, we can attach an <strong>IAM role</strong> to a <strong>Kubernetes Service Account</strong> and attach the service account to the <strong>pod/deployment</strong>.</p>
+
+<p>IAM role is added to the Kubernetes service account by adding annotation <code class="language-html highlighter-rouge">eks.amazonaws.com/role-arn</code> with value as the <code class="language-html highlighter-rouge">IAM Role ARN</code>.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">my-serviceaccount</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">eks.amazonaws.com/role-arn</span><span class="pi">:</span> <span class="s2">"</span><span class="s">&lt;IAM</span><span class="nv"> </span><span class="s">Role</span><span class="nv"> </span><span class="s">ARN&gt;"</span>
+</code></pre></div></div>
+
+<p>EKS create a Mutating Admission Webhook <a href="https://github.com/aws/amazon-eks-pod-identity-webhook/">pod-identity-webhook</a> and uses it to intercept the pod creation request and update the pod spec to include IAM credentials.</p>
+
+<p>Check the <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook">Mutating Admission Webhooks</a> in the cluster:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get mutatingwebhookconfigurations.admissionregistration.k8s.io
+
+NAME                                             WEBHOOKS   AGE
+0500-amazon-eks-fargate-mutation.amazonaws.com   2          21m
+pod-identity-webhook                             1          28m
+vpc-resource-mutating-webhook                    1          28m
+</code></pre></div></div>
+
+<p><code class="language-html highlighter-rouge">pod-identity-webhook</code> supports several configuration options:</p>
+
+<ol>
+  <li><code class="language-html highlighter-rouge">eks.amazonaws.com/role-arn</code> - IAM Role ARN to attach to the service account.</li>
+  <li><code class="language-html highlighter-rouge">eks.amazonaws.com/audience</code> - Intended autience of the <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection">token</a>, defaults to “sts.amazonaws.com” if not set.</li>
+  <li><code class="language-html highlighter-rouge">eks.amazonaws.com/sts-regional-endpoints</code> - AWS STS is a global service, however, we can use regional STS endpoints to reduce latency. Set to <code class="language-html highlighter-rouge">true</code> to use regional STS endpoints.</li>
+  <li><code class="language-html highlighter-rouge">eks.amazonaws.com/token-expiration</code> - AWS STS Token expiration duration, default is <code class="language-html highlighter-rouge">86400 seconds</code> or <code class="language-html highlighter-rouge">24 hours</code>.</li>
+  <li><code class="language-html highlighter-rouge">eks.amazonaws.com/skip-containers</code> - A comma-separated list of containers to skip adding volume and environment variables.</li>
+</ol>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">my-serviceaccount</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">eks.amazonaws.com/role-arn</span><span class="pi">:</span> <span class="s2">"</span><span class="s">&lt;IAM</span><span class="nv"> </span><span class="s">Role</span><span class="nv"> </span><span class="s">ARN&gt;"</span>
+    <span class="na">eks.amazonaws.com/audience</span><span class="pi">:</span> <span class="s2">"</span><span class="s">sts.amazonaws.com"</span>
+    <span class="na">eks.amazonaws.com/sts-regional-endpoints</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+    <span class="na">eks.amazonaws.com/token-expiration</span><span class="pi">:</span> <span class="s2">"</span><span class="s">86400"</span>
+</code></pre></div></div>
+
+<h3 id="how-irsa-works">How IRSA Works</h3>
+
+<p>When you define the IAM role for a service account using <code class="language-html highlighter-rouge">eks.amazonaws.com/role-arn</code> annotation and add this service account to the pod, <code class="language-html highlighter-rouge">pod-identity-webhook</code> mutates the pod spec to add <code class="language-html highlighter-rouge">environment variables</code> and <a href="https://kubernetes.io/docs/concepts/storage/volumes/#projected">projected mount volumes</a>.</p>
+
+<p>These are the environment variables added by <code class="language-html highlighter-rouge">pod-identity-webhook</code> in the pod spec:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="na">env</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">AWS_DEFAULT_REGION</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s">us-east-1</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">AWS_REGION</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s">us-east-1</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">AWS_ROLE_ARN</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">&lt;IAM</span><span class="nv"> </span><span class="s">ROLE</span><span class="nv"> </span><span class="s">ARN&gt;"</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">AWS_WEB_IDENTITY_TOKEN_FILE</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/run/secrets/eks.amazonaws.com/serviceaccount/token"</span>
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p><code class="language-html highlighter-rouge">AWS_DEFAULT_REGION</code> and <code class="language-html highlighter-rouge">AWS_REGION</code> - Cluster Region</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">AWS_ROLE_ARN</code> - IAM Role ARN.</p>
+  </li>
+  <li>
+    <p><code class="language-html highlighter-rouge">AWS_WEB_IDENTITY_TOKEN_FILE</code> - Path to the tokens file</p>
+  </li>
+</ol>
+
+<p><code class="language-html highlighter-rouge">pod-identity-webhook</code> also adds a projected volume for service account token:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="na">volumeMounts</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/run/secrets/eks.amazonaws.com/serviceaccount"</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">aws-iam-token</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">aws-iam-token</span>
+    <span class="na">projected</span><span class="pi">:</span>
+      <span class="na">sources</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">serviceAccountToken</span><span class="pi">:</span>
+          <span class="na">audience</span><span class="pi">:</span> <span class="s2">"</span><span class="s">sts.amazonaws.com"</span>
+          <span class="na">expirationSeconds</span><span class="pi">:</span> <span class="m">86400</span>
+          <span class="na">path</span><span class="pi">:</span> <span class="s">token</span>
+</code></pre></div></div>
+
+<p>a projected volume is created with the name <code class="language-html highlighter-rouge">aws-iam-token</code> and mounted to the container at <code class="language-html highlighter-rouge">/var/run/secrets/eks.amazonaws.com/serviceaccount</code>.</p>
+
+<p><strong>Let’s test it out.</strong></p>
+
+<ul>
+  <li>Create an EKS cluster with a Managed NodeGroup and an IAM service account <code class="language-html highlighter-rouge">s3-reader</code> in the default namespace with <code class="language-html highlighter-rouge">AmazonS3ReadOnlyAccess</code> IAM permissions :</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">eksctl.io/v1alpha5</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterConfig</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">iam-cluster</span>
+  <span class="na">region</span><span class="pi">:</span> <span class="s">us-east-1</span>
+  <span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1.21"</span>
+<span class="na">availabilityZones</span><span class="pi">:</span> 
+  <span class="pi">-</span> <span class="s">us-east-1a</span>
+  <span class="pi">-</span> <span class="s">us-east-1b</span>
+  <span class="pi">-</span> <span class="s">us-east-1c</span>
+<span class="na">iam</span><span class="pi">:</span>
+  <span class="na">withOIDC</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="na">serviceAccounts</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">s3-reader</span>
+    <span class="na">attachPolicyARNs</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"</span>
+<span class="na">managedNodeGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">managed-ng-1</span>
+    <span class="na">instanceType</span><span class="pi">:</span> <span class="s">t3a.medium</span>
+    <span class="na">minSize</span><span class="pi">:</span> <span class="m">1</span>
+    <span class="na">maxSize</span><span class="pi">:</span> <span class="m">4</span>
+    <span class="na">desiredCapacity</span><span class="pi">:</span> <span class="m">4</span>
+</code></pre></div></div>
+
+<p><strong>Note:</strong>  We can also attach IAM Role directly using <code class="language-html highlighter-rouge">attachRoleARN</code>. However, the role should have below <code class="language-html highlighter-rouge">trust policy</code> to allow the pods to use this role :</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+ </span><span class="nl">"Version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2012-10-17"</span><span class="p">,</span><span class="w">
+ </span><span class="nl">"Statement"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+   </span><span class="nl">"Effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"Principal"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"Federated"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arn:aws:iam::&lt;AWS_ACCOUNT_ID&gt;:oidc-provider/oidc.&lt;REGION&gt;.eks.amazonaws.com/&lt;CLUSTER_ID&gt;"</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nl">"Action"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sts:AssumeRoleWithWebIdentity"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"Condition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"StringEquals"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nl">"oidc.&lt;REGION&gt;.eks.amazonaws.com/&lt;CLUSTER_ID&gt;:sub"</span><span class="p">:</span><span class="w"> </span><span class="s2">"system:serviceaccount:default:my-serviceaccount"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"StringLike"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nl">"oidc.&lt;REGION&gt;.eks.amazonaws.com/CLUSTER_ID:sub"</span><span class="p">:</span><span class="w"> </span><span class="s2">"system:serviceaccount:default:*"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+   </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+ </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>Check the role created by <code class="language-html highlighter-rouge">eksctl</code> for service account <code class="language-html highlighter-rouge">s3-reader</code></li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>eksctl get iamserviceaccount s3-reader <span class="nt">--cluster</span><span class="o">=</span>iam-cluster <span class="nt">--region</span><span class="o">=</span>us-east-1
+2021-08-25 02:51:14 <span class="o">[</span>ℹ]  eksctl version 0.61.0
+2021-08-25 02:51:14 <span class="o">[</span>ℹ]  using region us-east-1
+NAMESPACE NAME    ROLE ARN
+default   s3-reader &lt;IAM ROLE ARN&gt;
+</code></pre></div></div>
+
+<ul>
+  <li>Check the service account to verify <code class="language-html highlighter-rouge">eks.amazonaws.com/role-arn</code> annotation:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get sa s3-reader <span class="nt">-oyaml</span>
+</code></pre></div></div>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">eks.amazonaws.com/role-arn</span><span class="pi">:</span> <span class="s">&lt;IAM ROLE ARN&gt;</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app.kubernetes.io/managed-by</span><span class="pi">:</span> <span class="s">eksctl</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">s3-reader</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">secrets</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">s3-reader-token-5hnn7</span>
+</code></pre></div></div>
+
+<p>we can see that <code class="language-html highlighter-rouge">eksctl</code> has created the IAM role, service account and automatically added the annotation to the service account.</p>
+
+<ul>
+  <li>Since <code class="language-html highlighter-rouge">eksctl</code> doesn’t support all the annotations, let’s add them manually:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl annotate <span class="se">\</span>
+  sa s3-reader <span class="se">\</span>
+    <span class="s2">"eks.amazonaws.com/audience=test"</span> <span class="se">\</span>
+    <span class="s2">"eks.amazonaws.com/token-expiration=43200"</span>
+</code></pre></div></div>
+
+<p><strong>Note:</strong> As of August’21 these two annotations <code class="language-html highlighter-rouge">eks.amazonaws.com/sts-regional-endpoints</code> and <code class="language-html highlighter-rouge">eks.amazonaws.com/skip-containers</code> are not working with <code class="language-html highlighter-rouge">EKS v1.21</code>.</p>
+
+<p>By default <code class="language-html highlighter-rouge">eks.amazonaws.com/audience</code> is set to <code class="language-html highlighter-rouge">sts.amazonaws.com</code> if not specified. To allow a different value for <code class="language-html highlighter-rouge">audience</code>, we have to add the audience in the <code class="language-html highlighter-rouge">OIDC Provider</code> and update the <code class="language-html highlighter-rouge">trust policy</code> of the IAM Role to add this audience.</p>
+
+<ul>
+  <li>Go to <a href="https://console.aws.amazon.com/iamv2/home">IAM Console</a>, click on <code class="language-html highlighter-rouge">Indentity Providers</code> and add the audience to the <code class="language-html highlighter-rouge">OIDC Identity provider</code>:</li>
+</ul>
+
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/1dwuj8anj8r01yrc8495.png" alt="oidc-audience" /></p>
+
+<ul>
+  <li>Modify the trust policy of the IAM Role used with the service account to add this <code class="language-html highlighter-rouge">audience</code> :</li>
+</ul>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"Version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2012-10-17"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"Statement"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"Effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"Principal"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"Federated"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arn:aws:iam::&lt;AWS_ACCOUNT_ID&gt;:oidc-provider/oidc.eks.&lt;REGION&gt;.amazonaws.com/id/&lt;CLUSTER_ID&gt;"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"Action"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sts:AssumeRoleWithWebIdentity"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"Condition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"StringEquals"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"oidc.eks.&lt;REGION&gt;.amazonaws.com/id/&lt;CLUSTER_ID&gt;:sub"</span><span class="p">:</span><span class="w"> </span><span class="s2">"system:serviceaccount:default:s3-reader"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"oidc.eks.us-east-1.amazonaws.com/id/&lt;CLUSTER_ID&gt;:aud"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>Create a pod to test the IAM permissions:</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">iam-test</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">serviceAccountName</span><span class="pi">:</span> <span class="s">s3-reader</span>
+  <span class="na">containers</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">iam-test</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">amazon/aws-cli</span>
+    <span class="na">args</span><span class="pi">:</span> <span class="pi">[</span> <span class="s2">"</span><span class="s">sts"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">get-caller-identity"</span> <span class="pi">]</span>
+</code></pre></div></div>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> iam-test.yaml
+</code></pre></div></div>
+
+<ul>
+  <li>Once the pod is ready, check the environment variables in the pod:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get pods iam-test <span class="nt">-ojson</span>|jq <span class="nt">-r</span> <span class="s1">'.spec.containers[0].env'</span>
+</code></pre></div></div>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWS_DEFAULT_REGION"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"us-east-1"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWS_REGION"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"us-east-1"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWS_ROLE_ARN"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;IAM ROLE ARN&gt;"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWS_WEB_IDENTITY_TOKEN_FILE"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/run/secrets/eks.amazonaws.com/serviceaccount/token"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>Check the <code class="language-html highlighter-rouge">aws-iam-token volume</code> in the pod:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get pods iam-test <span class="nt">-ojson</span>|jq <span class="nt">-r</span> <span class="s1">'.spec.volumes[]| select(.name=="aws-iam-token")'</span>
+</code></pre></div></div>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"aws-iam-token"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"projected"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"defaultMode"</span><span class="p">:</span><span class="w"> </span><span class="mi">420</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"sources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"serviceAccountToken"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"audience"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"expirationSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">43200</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"token"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>we can see that <code class="language-html highlighter-rouge">expirationSeconds</code> is <code class="language-html highlighter-rouge">43200</code> as specified in the annotation <code class="language-html highlighter-rouge">eks.amazonaws.com/token-expiration</code>.</p>
+
+<ul>
+  <li>Check the <code class="language-html highlighter-rouge">volumeMounts</code> in the pod:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get pods iam-test <span class="nt">-ojson</span>|jq <span class="nt">-r</span> <span class="s1">'.spec.containers[0].volumeMounts'</span>
+</code></pre></div></div>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"mountPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/run/secrets/kubernetes.io/serviceaccount"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"kube-api-access-xjjqv"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"mountPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/run/secrets/eks.amazonaws.com/serviceaccount"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"aws-iam-token"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>Check the logs of the pod <code class="language-html highlighter-rouge">iam-test</code> to see the role assumed by the pod:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl logs iam-test
+</code></pre></div></div>
+:ET

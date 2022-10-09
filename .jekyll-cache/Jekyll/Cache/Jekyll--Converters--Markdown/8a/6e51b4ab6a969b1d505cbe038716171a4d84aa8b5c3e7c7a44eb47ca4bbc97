@@ -1,0 +1,215 @@
+I"�1<p>Apache Spark is one of the most famous Big Data frameworks that allows you to process data at any scale.</p>
+
+<p>Spark jobs can run on the Kubernetes cluster and have native support for the Kubernetes scheduler in GA from <a href="https://spark.apache.org/releases/spark-release-3-1-1.html">release 3.1.1</a> onwards.</p>
+
+<p>Spark comes with a <code class="language-html highlighter-rouge">spark-submit</code> script that allows submitting spark applications on a cluster using a single interface without the need to customize the script for different cluster managers.</p>
+
+<p><code class="language-html highlighter-rouge">spark-submit</code> on Kubernetes cluster works as follows:</p>
+
+<ol>
+  <li>Spark creates a Spark driver running within a Kubernetes pod.</li>
+  <li>The driver creates executors which are also running within Kubernetes pods and connects to them and executes application code.</li>
+  <li>When the application completes, the executor pods terminate and are cleaned up, but the driver pod persists logs and remains in “completed” state in the Kubernetes API until it’s eventually garbage collected or manually cleaned up.</li>
+</ol>
+
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/mxarfncezl1094ravi9h.png" alt="spark-eks" /></p>
+
+<p>To submit a spark job on a kubernetes cluster using <code class="language-html highlighter-rouge">spark-submit</code> :</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./bin/spark-submit <span class="se">\</span>
+    <span class="nt">--master</span> k8s://https://&lt;k8s-apiserver-host&gt;:&lt;k8s-apiserver-port&gt; <span class="se">\</span>
+    <span class="nt">--deploy-mode</span> cluster <span class="se">\</span>
+    <span class="nt">--name</span> spark-pi <span class="se">\</span>
+    <span class="nt">--class</span> org.apache.spark.examples.SparkPi <span class="se">\</span>
+    <span class="nt">--conf</span> spark.executor.instances<span class="o">=</span>5 <span class="se">\</span>
+    <span class="nt">--conf</span> spark.kubernetes.container.image<span class="o">=</span>&lt;spark-image&gt; <span class="se">\</span>
+    <span class="nb">local</span>:///path/to/examples.jar
+</code></pre></div></div>
+
+<p>While <code class="language-html highlighter-rouge">spark-submit</code> provides support for several Kubernetes features such as <code class="language-html highlighter-rouge">secrets</code>, <code class="language-html highlighter-rouge">persistentVolumes</code>, <code class="language-html highlighter-rouge">rbac</code> via <a href="https://spark.apache.org/docs/latest/running-on-kubernetes.html#configuration">configuration parameters</a>, it still lacks a lot of features thus it’s not suitable to use in production effectively.</p>
+
+<h4 id="spark-on-k8s-operator">Spark on K8s Operator</h4>
+
+<p><a href="https://github.com/GoogleCloudPlatform/spark-on-k8s-operator">Spark on K8s Operator</a> is a project from Google that allows submitting spark applications on Kubernetes cluster using CustomResource Definition <a href="https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/blob/master/docs/api-docs.md#sparkoperator.k8s.io/v1beta2.SparkApplication">SparkApplication</a>.
+It uses mutating admission webhook to modify the pod spec and add the features not officially supported by <code class="language-html highlighter-rouge">spark-submit</code>.</p>
+
+<p>The Kubernetes Operator for Apache Spark consists of:</p>
+
+<ol>
+  <li>A <code class="language-html highlighter-rouge">SparkApplication</code> controller that watches events of creation, updates, and deletion of <code class="language-html highlighter-rouge">SparkApplication</code> objects and acts on the watch events,
+a submission runner that runs <code class="language-html highlighter-rouge">spark-submit</code> for submissions received from the controller,</li>
+  <li>A Spark pod monitor that watches for Spark pods and sends pod status updates to the controller,</li>
+  <li>A <a href="https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/">Mutating Admission Webhook</a> that handles customizations for Spark driver and executor pods based on the annotations on the pods added by the controller,</li>
+  <li>A command-line tool named <code class="language-html highlighter-rouge">sparkctl</code> for working with the operator.</li>
+</ol>
+
+<p>The following diagram shows how different components interact and work together.</p>
+
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/izwol4kmf92ybjpx0p4g.png" alt="spark-operator" /></p>
+
+<h4 id="setup-spark-on-k8s-operator-on-eks-fargate">Setup Spark on K8s Operator on EKS Fargate</h4>
+
+<ol>
+  <li>
+    <p>Setup EKS cluster using <code class="language-html highlighter-rouge">eksctl</code> with fargate profile for <code class="language-html highlighter-rouge">default</code>, <code class="language-html highlighter-rouge">kube-system</code>, and <code class="language-html highlighter-rouge">spark</code> namespaces.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> eksctl apply <span class="nt">-f</span> - <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+ apiVersion: eksctl.io/v1alpha5
+ kind: ClusterConfig
+ metadata:
+   name: spark-cluster
+   region: us-east-1
+   version: "1.21"
+ availabilityZones: 
+   - us-east-1a
+   - us-east-1b
+   - us-east-1c
+ fargateProfiles:
+   - name: fp-all
+     selectors:
+       - namespace: kube-system
+       - namespace: default
+       - namespace: spark
+</span><span class="no"> EOF
+</span></code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Install <code class="language-html highlighter-rouge">Spark on K8s Operator</code> using helm3 in the <code class="language-html highlighter-rouge">spark</code> namespace.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+ helm upgrade <span class="se">\</span>
+     <span class="nt">--install</span> <span class="se">\</span>
+     spark-operator <span class="se">\</span>
+     spark-operator/spark-operator <span class="se">\</span>
+     <span class="nt">--namespace</span> spark <span class="se">\</span>
+     <span class="nt">--create-namespace</span> <span class="se">\</span>
+     <span class="nt">--set</span> webhook.enable<span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+     <span class="nt">--set</span> <span class="nv">sparkJobNamespace</span><span class="o">=</span>spark <span class="se">\</span>
+     <span class="nt">--set</span> serviceAccounts.spark.name<span class="o">=</span>spark <span class="se">\</span>
+     <span class="nt">--set</span> <span class="nv">logLevel</span><span class="o">=</span>10 <span class="se">\</span>
+     <span class="nt">--version</span> 1.1.6 <span class="se">\</span>
+     <span class="nt">--wait</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Verify Operator installation</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> kubectl get pods <span class="nt">-n</span> spark
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h4 id="submit-sparkpi-on-eks-cluster">Submit SparkPi on EKS Cluster</h4>
+
+<ol>
+  <li>
+    <p>Submit the <code class="language-html highlighter-rouge">SparkPi</code> application to the EKS cluster</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> kubectl apply <span class="nt">-f</span> - <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+ apiVersion: "sparkoperator.k8s.io/v1beta2"
+ kind: SparkApplication
+ metadata:
+   name: spark-pi
+   namespace: spark
+ spec:
+   type: Scala
+   mode: cluster
+   image: "gcr.io/spark-operator/spark:v3.1.1"
+   imagePullPolicy: Always
+   mainClass: org.apache.spark.examples.SparkPi
+   mainApplicationFile: "local:///opt/spark/examples/jars/spark-examples_2.12-3.1.1.jar"
+   sparkVersion: "3.1.1"
+   restartPolicy:
+     type: Never
+   driver:
+     cores: 1
+     coreLimit: "1200m"
+     memory: "512m"
+     labels:
+       version: 3.1.1
+     serviceAccount: spark
+   executor:
+     cores: 1
+     instances: 1
+     memory: "512m"
+     labels:
+       version: 3.1.1
+</span><span class="no"> EOF
+</span></code></pre></div>    </div>
+    <p>Note: <a href="https://kubernetes.io/docs/concepts/storage/volumes/#hostpath">hostPath</a> volume mounts are not supported in Fargate.</p>
+  </li>
+  <li>
+    <p>Check the status of <code class="language-html highlighter-rouge">SparkApplication</code></p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> kubectl <span class="nt">-n</span> spark describe sparkapplications.sparkoperator.k8s.io spark-pi
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Access Spark UI by port-forwarding to the <code class="language-html highlighter-rouge">spark-pi-ui-svc</code></p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> kubectl <span class="nt">-n</span> spark port-forward svc/spark-pi-ui-svc 4040:4040
+</code></pre></div>    </div>
+
+    <p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/soqlp8l157tkci21kry9.png" alt="spark-pi" /></p>
+  </li>
+</ol>
+
+<h4 id="managing-sparkapplication-with-sparkctl">Managing SparkApplication with sparkctl</h4>
+
+<p><code class="language-html highlighter-rouge">sparkctl</code> is CLI tool for creating, listing, checking status of, getting logs of, and deleting <code class="language-html highlighter-rouge">SparkApplications</code> running on the Kubernetes cluster.</p>
+
+<ol>
+  <li>
+    <p>Build <code class="language-html highlighter-rouge">sparkctl</code> from source:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone git@github.com:GoogleCloudPlatform/spark-on-k8s-operator.git
+<span class="nb">cd </span>spark-on-k8s-operator/sparkctl
+go build <span class="nt">-o</span> /usr/local/bin/sparkctl
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>List SparkApplication objects in <code class="language-html highlighter-rouge">spark</code> namespace:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sparkctl list <span class="nt">-n</span> spark
++----------+-----------+----------------+-----------------+
+|   NAME   |   STATE   | SUBMISSION AGE | TERMINATION AGE |
++----------+-----------+----------------+-----------------+
+| spark-pi | COMPLETED | 1h             | 1h              |
++----------+-----------+----------------+-----------------+
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Check the status of SparkApplication <code class="language-html highlighter-rouge">spark-pi</code> :</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sparkctl status spark-pi <span class="nt">-n</span> spark
+
+ application state:
+ +-----------+----------------+----------------+-----------------+--------------------+--------------------+-------------------+
+ |   STATE   | SUBMISSION AGE | COMPLETION AGE |   DRIVER POD    |     DRIVER UI      | SUBMISSIONATTEMPTS | EXECUTIONATTEMPTS |
+ +-----------+----------------+----------------+-----------------+--------------------+--------------------+-------------------+
+ | COMPLETED | 1h             | 1h             | spark-pi-driver | 10.100.97.206:4040 |                  1 |                 1 |
+ +-----------+----------------+----------------+-----------------+--------------------+--------------------+-------------------+
+ executor state:
+ +----------------------------------+-----------+
+ |           EXECUTOR POD           |   STATE   |
+ +----------------------------------+-----------+
+ | spark-pi-418ac87b48d177c9-exec-1 | COMPLETED |
+ +----------------------------------+-----------+
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Check SparkApplication <code class="language-html highlighter-rouge">spark-pi</code> logs:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sparkctl log spark-pi <span class="nt">-n</span> spark 
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Port-forward to Spark UI:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sparkctl forward spark-pi <span class="nt">-n</span> spark
+</code></pre></div>    </div>
+
+    <p>you can access the Spark UI at http://localhost:4040</p>
+  </li>
+</ol>
+:ET

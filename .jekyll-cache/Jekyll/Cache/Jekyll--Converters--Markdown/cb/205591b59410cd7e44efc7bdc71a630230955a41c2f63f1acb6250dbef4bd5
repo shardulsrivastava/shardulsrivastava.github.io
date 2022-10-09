@@ -1,0 +1,30 @@
+I"Ý
+<p>Kubernetes has become a de-factor standard because it takes care of a lot of complexities internally. One of those complexities is cluster autoscaling that is provisioning of nodes based on increased number of workloads.</p>
+
+<p><a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Cluster Autoscaler</a> is a project maintained by a community called <code class="language-html highlighter-rouge">sig-autoscaling</code>, one of the communities under <code class="language-html highlighter-rouge">Kubernetes</code>. Check out more about Kubernetes Communities <a href="https://github.com/kubernetes/community">here</a>.</p>
+
+<p>Cluster autoscaler supports a number of <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider">cloud providers</a> including EKS. <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws">here</a> is the guide to setup cluster autoscaler on EKS and various configuration <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws/examples">examples</a>.</p>
+
+<p>Cluster autoscaler runs in the cluster as an addon and adds or removes the nodes in the cluster to allow scheduling of workloads. It kicks in when any of the pods is not able to schedule due to insufficient resources. Node groups in EKS are backed by <code class="language-html highlighter-rouge">EC2 Auto Scaling Groups</code> and CA updates the number of node in the ASG based on scale up or down. It also supports Mixed Instance policies for Spot instances that allowing users to save cost with Spot instances with the added risk of workload interruption.</p>
+
+<p>While CA takes care of scaling efficiently, there are still issues that EKS users face such as :</p>
+
+<ol>
+  <li>When there are no instances in the Node group of matching requirements for the workload to be scheduled. It prints these messages in the logs:
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pod didn<span class="s1">'t trigger scale-up (it wouldn'</span>t fit <span class="k">if </span>a new node is added<span class="o">)</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Using too big instances in node groups, leading to low resources utilization hence incurring increase cost.</p>
+  </li>
+  <li>
+    <p>Using too low instances in Node groups, leading to node groups maxing out and resulting into unscheduled pods.</p>
+  </li>
+  <li>No way to identify the optimal choice instance types based on workloads.</li>
+</ol>
+
+<p>All of these issues and many more can be solved with <a href="https://karpenter.sh/">Karpenter</a></p>
+
+<p><img src="/assets/images/karpenter.jpg" alt="karpenter" /></p>
+
+:ET
