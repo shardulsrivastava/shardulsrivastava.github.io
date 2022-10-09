@@ -5,7 +5,7 @@ canonical_url: https://dev.to/aws-builders/scaling-in-eks-with-karpenter
 author: shardul
 tags: [eks, karpenter, autoscaler]
 categories: [eks, karpenter, autoscaler]
-image: assets/images/karpenter-ca-3.png
+image: assets/images/karpenter-ca.png
 description: "Scaling in EKS with Karpenter"
 featured: true
 comments: false
