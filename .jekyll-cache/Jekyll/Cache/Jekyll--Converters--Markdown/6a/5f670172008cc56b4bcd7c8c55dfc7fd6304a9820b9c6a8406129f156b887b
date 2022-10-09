@@ -1,2 +1,0 @@
-I"3<p>If you use EKS then you have found yourself in a situation where a user can’t access the cluster despite having all the IAM permissions and gets an <code class="language-html highlighter-rouge">Unauthorized</code> message like <a href="https://friends.fandom.com/wiki/Eddie_Menuek">Eddie</a> here.</p>
-:ET

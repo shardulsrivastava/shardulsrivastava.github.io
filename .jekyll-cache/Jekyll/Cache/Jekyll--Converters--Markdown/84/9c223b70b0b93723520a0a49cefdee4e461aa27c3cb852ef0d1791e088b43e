@@ -1,3 +1,0 @@
-I"a<p>Canary deployment is a way of deploying the application in a phased manner. In this pattern, we deploy a new version of the application alongside the production version, then rollout the change to a small subset of servers. 
-Once new version of the application is tested by the real users, then rollout the change out to the rest of the servers.</p>
-:ET

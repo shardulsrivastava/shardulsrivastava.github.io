@@ -1,8 +1,0 @@
-I"õ<p>Kubernetes has become a de-factor standard because it takes care of a lot of complexity internally. One of those complexities is cluster autoscaling that is provisioning of nodes based on increased number of workloads.</p>
-
-<p><a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Cluster Autoscaler</a> is a project maintained by a community called <code class="language-html highlighter-rouge">sig-autoscaling</code>, one of the communities under <code class="language-html highlighter-rouge">Kubernetes</code>. Check out more about Kubernetes Communities <a href="https://github.com/kubernetes/community">here</a>.</p>
-
-<p>Cluster autoscaler runs in the cluster as an addon and adds or removes the number of nodes in the cluster to allow scheduling of workloads. It kicks in when any of the pods is not unscheduled.</p>
-
-<p>Cluster autoscaler a number of <a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider">cloud providers</a> and</p>
-:ET
