@@ -33,7 +33,7 @@ pod didn't trigger scale-up (it wouldn't fit if a new node is added)
 
 All of these issues and many more can be solved with...
 
-![karpenter]({{ site.baseurl }}/assets/images/karpenter.jpeg)
+![khaby]({{ site.baseurl }}/assets/images/khaby.jpeg)
 
 ## Karpenter
 
