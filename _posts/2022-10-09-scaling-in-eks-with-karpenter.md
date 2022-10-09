@@ -10,13 +10,13 @@ description: "Scaling in EKS with Karpenter"
 featured: true
 comments: false
 ---
-Kubernetes has become a de-factor standard because it takes care of a lot of complexities internally. One of those complexities is cluster autoscaling that is provisioning of nodes based on increased number of workloads.
+Kubernetes has become a de-facto standard because it takes care of a lot of complexities internally. One of those complexities is cluster autoscaling i.e provisioning of nodes based on the increased number of workloads.
 
 [Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) is a project maintained by a community called `sig-autoscaling`, one of the communities under `Kubernetes`. Check out more about Kubernetes Communities [here](https://github.com/kubernetes/community).
 
 Cluster autoscaler supports a number of [cloud providers](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider) including EKS. [here](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws) is the guide to setup cluster autoscaler on EKS and various configuration [examples](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/aws/examples).
 
-Cluster autoscaler runs in the cluster as an addon and adds or removes the nodes in the cluster to allow scheduling of workloads. It kicks in when any of the pods is not able to schedule due to insufficient resources. Node groups in EKS are backed by `EC2 Auto Scaling Groups` and CA updates the number of node in the ASG based on scale up or down. It also supports Mixed Instance policies for Spot instances that allowing users to save cost with Spot instances with the added risk of workload interruption.
+Cluster autoscaler runs in the cluster as an addon and adds or removes the nodes in the cluster to allow the scheduling of workloads. It kicks in when any of the pods are not able to schedule due to insufficient resources. Node groups in EKS are backed by `EC2 Auto Scaling Groups` and CA updates the number of nodes in the ASG based on scale up or down. It also supports Mixed Instance policy for Spot instances that allows users to save costs with Spot instances with the added risk of workload interruption.
 
 While CA takes care of scaling efficiently, there are still issues that EKS users face such as :
 
@@ -25,9 +25,9 @@ While CA takes care of scaling efficiently, there are still issues that EKS user
 pod didn't trigger scale-up (it wouldn't fit if a new node is added)
 ```
 
-2. Using too big instances in node groups, leading to low resources utilization hence incurring increase cost.
+2. Using too big instances in node groups, leads to low resource utilization and increased cost.
 
-3. Using too low instances in Node groups, leading to node groups maxing out and resulting into unscheduled pods.
+3. Using too low instances in Node groups, leading to node groups maxing out and resulting in unscheduled pods.
 
 4. No way to identify the optimal choice instance types based on workloads.
 
@@ -37,17 +37,17 @@ All of these issues and many more can be solved with...
 
 ## Karpenter
 
-[Karpenter](https://karpenter.sh/) is an open source project by AWS that improves the efficiency and cost of running workloads on Kubernetes clusters. It's group less i.e it works by provisioning nodes based on the workload and the nodes provisioned are not part of any ASG.
+[Karpenter](https://karpenter.sh/) is an open-source project by AWS that improves the efficiency and cost of running workloads on Kubernetes clusters. It's group less i.e it works by provisioning nodes based on the workload and the nodes provisioned are not part of any ASG.
 
-This allows Karpenter to scale nodes more efficiently and retry in a few miliseconds when node capacity is not available instead of waiting for minutes in case of an ASG and gives the flexibility to provision Instances from a variety of instance types without creating hundreds of node groups.
+This allows Karpenter to scale nodes more efficiently and retry in a few milliseconds when node capacity is not available instead of waiting for minutes in case of an ASG and gives the flexibility to provision Instances from a variety of instance types without creating hundreds of node groups.
 
 ## Karpenter Installation
 
-Karpenter runs as a controller in the form of a deployment in the cluster and relies on a CRD called [Provisioner](https://karpenter.sh/v0.17.0/provisioner/) for determine how to handle workloads such as consolidate them to save costs, move them to another node with a different instance type to save cost and  scale down nodes when they are empty.
+Karpenter controller runs on the cluster as deployment and relies on a CRD called [Provisioner](https://karpenter.sh/v0.17.0/provisioner/) to determine how to handle workloads such as consolidate them to save costs, move them to another node with a different instance type to save cost and scale down nodes when they are empty.
 
 ### Setup an EKS Cluster with Karpenter enabled
 
-Karpenter can be installed by following the steps in the [Getting Started Guide](https://karpenter.sh/v0.17.0/getting-started/getting-started-with-eksctl/) which involved creating several Cloudformation stacks, IAM role cluster bindings. however simplest way to get started is to use `eksctl` that supports out of box `karpenter` installation.
+Karpenter can be installed by following the steps in the [Getting Started Guide](https://karpenter.sh/v0.17.0/getting-started/getting-started-with-eksctl/) which involved creating several Cloudformation stacks, IAM role cluster bindings. however, the simplest way to get started is to use `eksctl` that supports out-of-box `karpenter` installation.
 
 Let's create a cluster with `eksctl` with a managed node group and `karpenter` installed:
 
@@ -77,7 +77,7 @@ managedNodeGroups:
     amiFamily: AmazonLinux2
 ```
 
-this would create a cluster `karpenter-cluster` in `eu-west-1` region with a managed Node group `managed-ng-1` and couple of components for `karpenter` to work:
+this would create a cluster `karpenter-cluster` in the `eu-west-1` region with a managed Node group `managed-ng-1` and a couple of components for `karpenter` to work:
 
 1. `eksctl-KarpenterControllerPolicy-karpenter-cluster` - An [IAM policy](https://github.com/aws/karpenter/blob/30a4a5af24fb065471c9ec1203db861d9eb45ac4/website/content/en/v0.15.0/getting-started/getting-started-with-eksctl/cloudformation.yaml#L34-L66) with permissions to provision nodes and spot instances.
 2. `eksctl-karpenter-cluster-iamservice-role` - An IAM role with IAM policy `eksctl-KarpenterControllerPolicy-karpenter-cluster` and attached to the service account used by karpenter to allow it to provision instances.
@@ -89,7 +89,7 @@ Now we have `karpenter` installed in the cluster.
 
 ### Setup Karpenter Provisioner
 
-To configure Karpenter, you need to create a [Provisioner](https://karpenter.sh/v0.17.0/provisioner/) resource that defines how Karpenter provisions nodes and deletes them. Karpenter has a number of configurations. Let's start with the basic Provisioner :
+To configure Karpenter, you need to create a [Provisioner](https://karpenter.sh/v0.17.0/provisioner/) resource that defines how Karpenter provisions nodes and deletes them. Karpenter has several configuration options. Let's start with the basic Provisioner :
 
 ```yaml
 apiVersion: karpenter.sh/v1alpha5
@@ -176,7 +176,7 @@ kubectl get node ip-192-168-32-230.eu-west-1.compute.internal -ojson | jq -r '.m
 
 We can see that it's a spot instance of type `t3.medium`. 
 
-By default, `karpenter` provisions spot instance, however we can change it to `on-demand` instance too based on our requirements. Let's try to delete the deloyment to see if `karpenter` removes the instances.
+By default, `karpenter` provisions spot instance. However, we can change it to `on-demand` instance too based on our requirements. Let's try to delete the deployment to see if `karpenter` removes the instances.
 
 ```bash
 kubectl delete deployment nginx
@@ -184,13 +184,13 @@ kubectl delete deployment nginx
 
 ![no pods]({{ site.baseurl }}/assets/images/no-pods.png)
 
-and pod is gone, however node is still there :
+and the pod is gone, but the node is still there :
 
 ![node still there]({{ site.baseurl }}/assets/images/node-still-there.png)
 
 ### ttlSecondsAfterEmpty
 
-With `ttlSecondsAfterEmpty`, Karpenter deletes empty instances after the ttl defined.
+With `ttlSecondsAfterEmpty`, Karpenter deletes empty instances after the TTL is elapsed.
 
 Let's update the Provisioner to this value :
 
@@ -208,7 +208,7 @@ spec:
       karpenter.sh/discovery: karpenter-cluster
 ```
 
-Now karpenter will wait for 60 seconds before it cordons, drains and deletes the empty node. We can check the details in the `karpenter` logs:
+Now karpenter will wait for 60 seconds before it cordons, drains, and deletes the empty node. We can check the details in the `karpenter` logs:
 
 ```bash
 kubectl -n karpenter logs -f -l app.kubernetes.io/instance=karpenter -c controller
@@ -219,7 +219,7 @@ kubectl -n karpenter logs -f -l app.kubernetes.io/instance=karpenter -c controll
 ```
 
 **Note:**
-For node provisioned by Karpenter,  it add a [finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) for graceful node termination, we can check this by inspecting the node:
+For the nodes provisioned by Karpenter,  it adds a [finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) for graceful node termination, we can check this by inspecting the node:
 
 ```bash
 kubectl get nodes ip-192-168-32-230.eu-west-1.compute.internal -ojson | jq -r  '.metadata.finalizers'
