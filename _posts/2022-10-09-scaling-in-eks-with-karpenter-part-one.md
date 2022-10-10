@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  Scaling in EKS with Karpenter - Part 1
-canonical_url: https://dev.to/aws-builders/scaling-in-eks-with-karpenter-part-1
+canonical_url: https://dev.to/aws-builders/scaling-in-eks-with-karpenter-part-1-3c7e
 author: shardul
 tags: [eks, karpenter, autoscaler]
 categories: [eks, karpenter, autoscaler]
@@ -31,7 +31,7 @@ While `CA` takes care of the scaling efficiently, there are still issues that EK
 
 All of these issues and many more can be solved with...
 
-![khaby]({{ site.baseurl }}/assets/images/khaby.jpeg)
+![khaby](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/lmpjvhoxdnpfj79740e8.jpeg)
 
 ## Karpenter
 
@@ -138,7 +138,7 @@ Check if pods are running :
 ```bash
 kubectl get pods
 ```
-![pending pods]({{ site.baseurl }}/assets/images/pod-pending.png)
+![pending pods](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/0glsctppx7ovfebtn8kg.png)
 
 Initially Nginx pod is pending, `karpenter` detects a pending pod and kicks in to create a node to accomodate the pending pod, Check the `karpenter` cntroller logs to see the details : 
 
@@ -159,11 +159,11 @@ kubectl -n karpenter logs -f -l app.kubernetes.io/instance=karpenter -c controll
 
 Immediately we can see that there is an **additional node** `ip-192-168-32-230.eu-west-1.compute.internal` launched by `karpenter`
 
-![karpenter node provisioning]({{ site.baseurl }}/assets/images/node-provisioning.png)
+![karpenter node provisioning](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/d32ehnon5ejhuk6kjw9q.png)
 
 and the pod is running on this node:
 
-![running pods]({{ site.baseurl }}/assets/images/pod-running.png)
+![running pods](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/p3ie67un6m2gwnajr5d1.png)
 
 Let's inspect the node created by the `karpenter` :
 
@@ -171,7 +171,7 @@ Let's inspect the node created by the `karpenter` :
 kubectl get node ip-192-168-32-230.eu-west-1.compute.internal -ojson | jq -r '.metadata.labels'
 ```
 
-![exlore provisioned node]({{ site.baseurl }}/assets/images/explore-provisioned-node.png)
+![exlore provisioned node](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/5k96cb913tn671rg1yql.png)
 
 We can see that it's a [spot instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html) of type `t3.medium`. 
 
@@ -181,11 +181,11 @@ By default, `karpenter` provisions **spot instance**. However, we can change it 
 kubectl delete deployment nginx
 ```
 
-![no pods]({{ site.baseurl }}/assets/images/no-pods.png)
+![no pods](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/cezbqyqu40n88kifs7y9.png)
 
 and the pod is gone, but the node is still there :
 
-![node still there]({{ site.baseurl }}/assets/images/node-still-there.png)
+![node still there](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/5j1uo2dpth2547l6765g.png)
 
 ### ttlSecondsAfterEmpty
 
