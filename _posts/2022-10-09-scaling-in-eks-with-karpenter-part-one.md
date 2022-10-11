@@ -140,7 +140,7 @@ kubectl get pods
 ```
 ![pending pods](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/0glsctppx7ovfebtn8kg.png)
 
-Initially Nginx pod is pending, `karpenter` detects a pending pod and kicks in to create a node to accomodate the pending pod, Check the `karpenter` cntroller logs to see the details : 
+Initially Nginx pod is pending, `karpenter` detects a pending pod and kicks in to create a node to accommodate the pending pod, Check the `karpenter` controller logs to see the details : 
 
 ```bash
 kubectl -n karpenter logs -f -l app.kubernetes.io/instance=karpenter -c controller
@@ -161,7 +161,7 @@ Immediately we can see that there is an **additional node** `ip-192-168-32-230.e
 
 ![karpenter node provisioning](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/d32ehnon5ejhuk6kjw9q.png)
 
-and the pod is running on this node:
+and the pod is running now on this node:
 
 ![running pods](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/p3ie67un6m2gwnajr5d1.png)
 
