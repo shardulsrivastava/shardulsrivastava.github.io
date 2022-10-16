@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  Most useful kubectl Plugins
+title:  Most Useful kubectl Plugins
 canonical_url: https://dev.to/aws-builders/most-useful-kubectl-plugins-11i1
 author: shardul
 tags: [kubectl, kubernetes, plugins]
@@ -10,11 +10,11 @@ description: "Scaling in EKS with Karpenter - Part 1"
 featured: true
 comments: false
 ---
-Kubernetes provides a convenient utility `kubectl` to interact with the cluster. `kubectl` talks to [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) and allows you to create/update and delete objects in the cluster.
+Kubernetes provides a convenient utility `kubectl` to interact with the cluster. `kubectl` talks to [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) and allows you to create, update and delete objects/resources in the cluster.
 
-## How to pronounce kubectl
+## How To Pronounce kubectl
 
-When you first start using `kubectl`, the first thing that comes to your mind is `how the heck do you pronounce this`. There are different pronunciations used across the industry, as long as everybody is referring to the same command line tool, it's all good. 
+When you start using `kubectl`, the first thing that comes to mind is `how the heck do you pronounce this`. There are different pronunciations used by different people, as long as everybody is referring to the same command line tool, it's all good. 
 
 Here are the three different pronunciations that I have heard people using:
 
@@ -22,9 +22,9 @@ Here are the three different pronunciations that I have heard people using:
 2. `kube-cuttle`
 3. `kube-cee-tee-ell` &larr;
 
-> I use the last one "kube-cee-tee-ell"
+> P.S: I use the last one.
 
-## What are kubectl plugins
+## What are kubectl Plugins
 Kubernetes provides a way to extend the functionality of `kubectl` using plugins. Plugins allow us to add additional functionality to the `kubectl` command line tool.
 
 `kubectl plugins` are executables whose names start with `kubectl-`. These executables should be part of the `PATH` so that `kubectl` can discover them. kubectl automatically detects them and runs them for you.
@@ -56,7 +56,7 @@ Let's take a look at some of the most useful plugins
 
 #### neat Plugin
 
-Install [neat]((https://github.com/itaysk/kubectl-neat) plugin with krew : 
+Install [neat](https://github.com/itaysk/kubectl-neat) plugin with krew : 
 
 ```bash
 kubectl krew install neat
@@ -104,7 +104,7 @@ spec:
   dnsPolicy: ClusterFirst
 ```
 
-the output is too verbose that you would want to be able to troubleshoot. This is where `neat` plugin comes to our rescue.
+the output is too verbose for troubleshooting. This is where `neat` plugin comes to our rescue.
 
 
 Let's get the pod details, this time add `| kubectl neat` at the end of the command :
@@ -139,7 +139,7 @@ spec:
 
 #### view-secret Plugin
 
-Install [kubectl-view-secret](https://github.com/elsesiy/kubectl-view-secret) plugin with krew : 
+Install [view-secret](https://github.com/elsesiy/kubectl-view-secret) plugin with krew: 
 
 ```bash
 kubectl krew install view-secret
@@ -196,9 +196,11 @@ Install [blame](https://github.com/knight42/kubectl-blame) plugin with krew :
 kubectl krew install blame
 ```
 
-The `blame` plugin helps you to figure out who changed several fields of an object in the cluster - `kubectl`/`kube-controller-manager`/`helm`. It internally uses the `.metadata.manageFields` field of the object. Read more about `metadata.managedFields` [here](https://kubernetes.io/docs/reference/using-api/server-side-apply/).
+The `blame` plugin helps you to figure out who changed several fields of an object in the cluster - `kubectl`, `kube-controller-manager` or `helm`. It internally uses the `.metadata.manageFields` field of the object to get this information. 
 
-If we edit a deployment `nginx` in my cluster manually and update the replias to 2. We can see those details using the `blame` plugin that changes were done using `kubectl edit`
+> Read more about `metadata.managedFields` [here](https://kubernetes.io/docs/reference/using-api/server-side-apply/).
+
+If we edit a deployment `nginx` manually and update the replias to 2. We can see those details using the `blame` plugin that changes were done using `kubectl edit`
 
 ```bash
 kubectl blame deploy nginx  
@@ -211,16 +213,15 @@ kubectl-edit              (Update 26 minutes ago)   replicas: 2
 kubectl-client-side-apply (Update    8 hours ago)   revisionHistoryLimit: 10
 ```
 
-
 #### df-pv Plugin
 Install [df-pv](https://github.com/yashbhutwala/kubectl-df-pv) plugin with krew : 
 ```bash
 kubectl krew install df-pv
 ```
 
-If you are familiar with the `df` command in Linux and Mac, then you would love the `df-pv` plugin, it provides the same functionality as `df` provides, except that it provides details for [Persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) in a human-readable format.
-The `df-pv` plugin comes in handy if you want to get an overall view of PVs in the cluster. It shows you details like `Size`, `Used`, `Available`, and `%Used`.
+If you are familiar with the `df` command in Linux and Mac, then you would love the `df-pv` plugin. It provides the same functionality as `df` provides, except that it provides details for [Persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) in a human-readable format.
 
+The `df-pv` plugin comes in handy if you want to get an overall view of PVs in the cluster. It shows you details like `Size`, `Used`, `Available`, and `%Used`.
 
 ## Installing plugins directly from repositories
 
@@ -237,7 +238,7 @@ mv kubectl-clean /usr/local/bin
 kubectl clean --help
 ```
 
-The `clean` plugin comes very handy if you're using EKS or GKE where you have orphaned pods lying around cluttering the cluster. It cleans them all up in one go.
+The `clean` plugin comes handy if you're using EKS or GKE where you have orphaned pods lying around cluttering the cluster. It cleans them all up in one go.
 
 To delete all the orphaned pods in your cluster 
 
