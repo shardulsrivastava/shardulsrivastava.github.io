@@ -22,7 +22,7 @@ Here are the three different pronunciations that I have heard people using:
 2. `kube-cuttle`
 3. `kube-cee-tee-ell` &larr;
 
-> P.S: I use the last one.
+> P.S: I use the last one 😄
 
 ## What are kubectl Plugins
 Kubernetes provides a way to extend the functionality of `kubectl` using plugins. Plugins allow us to add additional functionality to the `kubectl` command line tool.
