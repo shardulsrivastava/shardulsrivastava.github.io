@@ -228,7 +228,7 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 	kubectl describe DBInstance test-ack-aurora-instance-2
 	```
 
-	![rds-instance-status]({{ site.baseurl }}/assets/images/ack-rds-instance-status.png)
+	![rds-instance-status](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/os1m6jt0qf7rxd685fzj.png)
 
 	Status `available` means that DB Instances are ready to use now.
  
@@ -339,7 +339,7 @@ When you have the Aurora DB Cluster provisioned, you would want to extract value
 	kubectl view-secret ack-cluster-secret --all
 	```
 
-	![ack-field-export-secret]({{ site.baseurl }}/assets/images/ack-field-export-secret.png)
+	![ack-field-export-secret](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ha83dbp7fsdvj5ls0zf7.png)
 
 	**Note:** `view-secret` is a kubectl plugin, check out my [blog](https://shardul.dev/most-useful-kubectl-plugins/) on how to use this plugin.
 
