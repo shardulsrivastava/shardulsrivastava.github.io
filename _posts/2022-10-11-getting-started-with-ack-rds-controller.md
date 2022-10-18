@@ -182,7 +182,7 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 
 	```bash
 	kubectl apply -f test-ack-aurora-cluster.yaml
-	````
+	```
 
 5.  Once created, check the status of `DBCluster` resource `test-ack-aurora-cluster`:
 
@@ -217,7 +217,7 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 
 	```bash
 	kubectl apply -f test-ack-aurora-instance.yaml
-	````
+	```
 
 	When these instances are available, one of them will be a **Writer Instance** and other one will be a **Reader Instance**.
 
@@ -351,12 +351,12 @@ To clean up the clusters, first disable the delete protection by setting `.spec.
 kubectl apply -f test-ack-aurora-cluster.yaml
 
 dbcluster.rds.services.k8s.aws/test-ack-aurora-cluster configured
-````
+```
 
 Now, you can proceed to delete the instances first and then cluster:
 
 ```bash
 kubectl delete -f test-ack-aurora-instance.yaml
 kubectl delete -f test-ack-aurora-cluster.yaml
-````
+```
 
