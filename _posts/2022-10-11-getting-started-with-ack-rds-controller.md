@@ -303,7 +303,6 @@ When you have the Aurora DB Cluster provisioned, you would want to extract value
 `FieldExport` CRD allows you to export any spec or status field from a `DBCluster` or `DBInstance` into a Secret.
 
 1. Create an empty `Secret` :
-
 	```bash
 	kubectl create secret generic ack-cluster-secret
 	secret/ack-cluster-secret created
