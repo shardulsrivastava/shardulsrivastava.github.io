@@ -151,8 +151,7 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 	secret/test-ack-master-password created
 	```
 
-4. Create an Aurora DB Cluster `test-ack-aurora-cluster` using `DBCluster` : 
-
+4. Create an Aurora DB Cluster `test-ack-aurora-cluster` using `DBCluster` :
 	```yaml
 	apiVersion: rds.services.k8s.aws/v1alpha1
 	kind: DBCluster
@@ -178,13 +177,9 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 	  copyTagsToSnapshot: true
 	  preferredBackupWindow: 00:00-01:59
 	  preferredMaintenanceWindow: sat:02:00-sat:04:00
-	```
 
-	```bash
-	kubectl apply -f test-ack-aurora-cluster.yaml
 	```
-
-5.  Once created, check the status of `DBCluster` resource `test-ack-aurora-cluster`:
+5. Once created, check the status of `DBCluster` resource `test-ack-aurora-cluster`:
 
 	```bash
 	kubectl describe DBCluster test-ack-aurora-cluster
@@ -215,10 +210,6 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 	  engine: aurora-postgresql
 	```
 
-	```bash
-	kubectl apply -f test-ack-aurora-instance.yaml
-	```
-
 	When these instances are available, one of them will be a **Writer Instance** and other one will be a **Reader Instance**.
 
 7. Check the status of `DBInstance` :
@@ -229,6 +220,7 @@ To create an Aurora PostgreSQL Cluster with `ACK controller for RDS`, we have to
 	```
 
 	![rds-instance-status](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/os1m6jt0qf7rxd685fzj.png)
+
 
 	Status `available` means that DB Instances are ready to use now.
  
@@ -285,24 +277,20 @@ When you have the Aurora DB Cluster provisioned, you would want to extract value
 	    key: DATABASE_HOST
 	```
 
-	```bash
-	kubectl apply -f ack-cm-field-export.yaml 
-	fieldexport.services.k8s.aws/ack-cm-field-export created
-	```
-
 3. Inspect the values of ConfigMap `ack-cluster-config`
 
 	```bash
 	kubectl get cm ack-cluster-config -ojson|jq -r '.data'
 	```
 
-	![ack-field-export-cm]({{ site.baseurl }}/assets/images/ack-field-export-cm.png)
+	![ack-field-export-cm](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/lo1dnn2lld88r6ii4krt.png)
 
 ### Export the Database Details in a Secret
 
 `FieldExport` CRD allows you to export any spec or status field from a `DBCluster` or `DBInstance` into a Secret.
 
 1. Create an empty `Secret` :
+
 	```bash
 	kubectl create secret generic ack-cluster-secret
 	secret/ack-cluster-secret created
@@ -326,11 +314,6 @@ When you have the Aurora DB Cluster provisioned, you would want to extract value
 	    kind: secret
 	    name: ack-cluster-secret
 	    key: DATABASE_HOST
-	```
-
-	```bash
-	kubectl apply -f ack-secret-field-export.yaml
-	fieldexport.services.k8s.aws/ack-secret-field-export created
 	```
 
 3. Inspect the values of Secret `ack-cluster-secret`
