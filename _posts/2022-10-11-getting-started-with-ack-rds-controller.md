@@ -343,3 +343,4 @@ kubectl delete -f test-ack-aurora-instance.yaml
 kubectl delete -f test-ack-aurora-cluster.yaml
 ```
 
+> **Note: FieldExport and ACK resource should be in the same namespace.**
