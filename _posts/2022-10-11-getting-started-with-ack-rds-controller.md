@@ -326,6 +326,8 @@ When you have the Aurora DB Cluster provisioned, you would want to extract value
 
 	**Note:** `view-secret` is a kubectl plugin, check out my [blog](https://shardul.dev/most-useful-kubectl-plugins/) on how to use this plugin.
 
+> **Note: FieldExport and ACK resource should be in the same namespace.**
+
 ## Important - Clean up
 
 To clean up the clusters, first disable the delete protection by setting `.spec.deletionProtection` to false for the `test-ack-aurora-cluster` DBCluster resource:
@@ -342,5 +344,3 @@ Now, you can proceed to delete the instances first and then cluster:
 kubectl delete -f test-ack-aurora-instance.yaml
 kubectl delete -f test-ack-aurora-cluster.yaml
 ```
-
-> **Note: FieldExport and ACK resource should be in the same namespace.**
