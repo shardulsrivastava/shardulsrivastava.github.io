@@ -129,7 +129,7 @@ spec:
 ### Printing Known Request and Response Headers
 EnvoyProxy allows printing request headers and response headers with `%REQ(X?Y):Z%` and `%RESP(X?Y):Z%` respectively. This can be used to print any request header or response header and if the header is not present an alternative header can be given optionally.
 
-**`%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%` would print the `X-ENVOY-ORIGINAL-PATH` header, if it didn't exist `PATH` header would be printer and if even the `PATH` header is not present then `-` would be printed instead.
+**`%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%`** would print the `X-ENVOY-ORIGINAL-PATH` header, if it doesn't exist `PATH` header would be printed and if even the `PATH` header is also not present then `-` would be printed instead.
 
 So we can print all the headers that we know the name of, but how about any dynamic headers whose name changes with every request.
 
@@ -206,4 +206,4 @@ once applied, all the headers will be printed in the logs:
 
 Read more about EnvoyFilter [here](https://istio.io/latest/docs/reference/config/networking/envoy-filter/)
 
-> Note: Here I am using `request_handle:logCritical` method because default logLevel is WARN for Istio related components, you could also use `request_handle:logInfo` too if logLevel is set to Info.
+> Note: Here I am using `request_handle:logCritical` method because default logLevel is WARN for Istio components. `request_handle:logInfo` can be used, if logLevel is set to Info.
