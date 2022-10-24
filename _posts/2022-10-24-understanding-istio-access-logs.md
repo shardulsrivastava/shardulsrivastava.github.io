@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  Understanding Istio Access Logs
-canonical_url: https://dev.to/shardulsrivastava/understanding-istio-access-logs-2k5o
+canonical_url: https://dev.to/aws-builders/understanding-istio-access-logs-2k5o
 author: shardul
 tags: [istio, kubernetes, logs]
 categories: [istio, kubernetes, logs]
