@@ -206,4 +206,4 @@ once applied, all the headers will be printed in the logs:
 
 Read more about EnvoyFilter [here](https://istio.io/latest/docs/reference/config/networking/envoy-filter/)
 
-> Note: Here I am using `request_handle:logCritical` method because by default logLevel us WARN, you could also use `request_handle:logInfo` too if logLevel is changed to Info.
+> Note: Here I am using `request_handle:logCritical` method because default logLevel is WARN for Istio related components, you could also use `request_handle:logInfo` too if logLevel is set to Info.
