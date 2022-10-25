@@ -81,11 +81,11 @@ here `%` is used to define a field to be printed in the access logs. To print th
 3. **`%RESPONSE_FLAGS%`** - Additional details about response.  More details [here](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators:~:text=typed%20JSON%20logs.-,%25RESPONSE_FLAGS%25,-Additional%20details%20about)
 4. **`%RESPONSE_CODE_DETAILS%`** - Response code details. More details [here](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/response_code_details#response-code-details).
 5. **`%DURATION%`** - Total duration of the request.
-6. **`%UPSTREAM_HOST%`** - Upstream where the request is routed to, this would have the pod where the request went. 
-7. **`%REQ()%`** - This is used for printing request headers `%REQ(-FORWARDED-FOR)%` would print the `X-FORWARDED-FOR` request header.
-8. **`%RESP()%`** - This is used for printing response headers `%RESP(CONTENT-TYPE)%` would print the `CONTENT-TYPE` header in the response.
+6. **`%UPSTREAM_HOST%`** - Upstream where the request is routed to such as pod. It would print the pod's IP and port where the request went. Eg - `192.168.42.152:80`
+7. **`%REQ()%`** - This is used to print request headers. Eg -  `%REQ(-FORWARDED-FOR)%` would print the `X-FORWARDED-FOR` request header.
+8. **`%RESP()%`** - This is used to print response headers. Eg - `%RESP(CONTENT-TYPE)%` would print the `CONTENT-TYPE` header in the response.
 
-An exhausting list of fields that can be used to show access log information can be found [here](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators). 
+An exhausting list of available fields can be found [here](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators). 
 
 ## Customize Access Logs Format
 If you want to parse your logs with a tool like [Loki](https://grafana.com/oss/loki/), json format logs would be well suited. Access logs format can be changed by setting the `meshConfig.accessLogFormat`. 
@@ -126,18 +126,19 @@ spec:
       }
 ```
 
-### Printing Known Request and Response Headers
+## Printing Known Request and Response Headers
+
 EnvoyProxy allows printing request headers and response headers with `%REQ(X?Y):Z%` and `%RESP(X?Y):Z%` respectively. This can be used to print any request header or response header and if the header is not present an alternative header can be given optionally.
 
 **`%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%`** would print the `X-ENVOY-ORIGINAL-PATH` header, if it doesn't exist `PATH` header would be printed and if even the `PATH` header is also not present then `-` would be printed instead.
 
 So we can print all the headers that we know the name of, but how about any dynamic headers whose name changes with every request.
 
-![Istio Access logs IDK]({{ site.baseurl }}/assets/images/istio-logging-think.jpeg)
+![Istio Access logs IDK](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ak2pgf3g92q9uqvgibo9.jpeg)
 
-### Printing Request Headers and Request Body
+## Printing All the Request Headers and Request Body
 
-Istio uses EnvoyProxy which is extensible by design, `EnvoyFilter` provides a mechanism to customize the Envoy configuration. 
+Istio uses EnvoyProxy which is extensible by design, `EnvoyFilter` provides a mechanism to customize the Envoy configuration.
 
 The `HTTP Lua filter` allows Lua scripts to be run during both the request and response flows. This Envoy HTTP Lua filter prints all the request headers :
 
