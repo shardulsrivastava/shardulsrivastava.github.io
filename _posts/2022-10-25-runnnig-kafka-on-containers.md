@@ -216,20 +216,16 @@ We have an easier way of reading and writing from Kafka topics.
 
 As Confluent puts it, "It is a swiss-army knife of tools for inspecting and creating data in Kafka"
 
-`kcat` has two modes, it runs in producer mode by specifying the argument `-P` and consumer mode by specifying the argument `-C`.It also automatically selects its mode depending on the terminal or pipe type.
-
-If data is being piped to kcat it will automatically select producer (-P) mode.
-If data is being piped from kcat (e.g. standard terminal output) it will automatically select consumer (-C) mode.
+`kcat` has two modes, it runs in producer mode by specifying the argument `-P` and consumer mode by specifying the argument `-C`.It also automatically selects its mode depending on the terminal or pipe type. If data is being piped to kcat it will automatically select producer (-P) mode. If data is being piped from kcat (e.g. standard terminal output) it will automatically select consumer (-C) mode.
 
 1. To read data from kafka topics, simply run
-
-```bash
-kcat -b localhost:9092 -t kafka-test
-```
+	```bash
+	kcat -b localhost:9092 -t kafka-test
+	```
 
 2. To write data to a Kafka topic, run
-```bash
-kcat -P -b localhost:9092 -t kafka-test
-```
+	```bash
+	kcat -P -b localhost:9092 -t kafka-test
+	```
 
 Take a look at the examples [here](https://github.com/edenhill/kcat#examples) to find out more about the usage.
