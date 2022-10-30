@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Running Apache Kafka On Containers
-canonical_url: https://dev.to/shardulsrivastava/understanding-istio-access-logs-2k5o
+canonical_url: https://dev.to/aws-builders/running-apache-kafka-on-containers-2ing
 author: shardul
 tags: [kafka, kubernetes, containers, eks]
 categories: [kafka, kubernetes, containers, eks]
