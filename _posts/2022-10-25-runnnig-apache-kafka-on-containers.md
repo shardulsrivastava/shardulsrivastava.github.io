@@ -1,3 +1,16 @@
+---
+layout: post
+title: Running Apache Kafka On Containers
+canonical_url: https://dev.to/shardulsrivastava/understanding-istio-access-logs-2k5o
+author: shardul
+tags: [kafka, kubernetes, containers, eks]
+categories: [kafka, kubernetes, containers, eks]
+image: assets/images/kafka-on-containers.png
+description: "Running Apache Kafka On Containers"
+featured: true
+comments: false
+---
+
 Apache Kafka is one of the most famous data stores. It's a go-to tool to collect streaming data at scale and process them with either [Kafka streams](https://kafka.apache.org/documentation/streams/) or [Apache Spark](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html).
 
 Getting started with Kafka is challenging as it involves familiarizing a lot of new concepts such as topics, replication, and offsets, and then you have to understand what a Zookeeper is.
