@@ -46,7 +46,7 @@ Start both containers in detached mode:
 docker-compose up -d
 ```
 
-this starts zookeeper on port `2181` and Kafka on port `9092` along with some configurations:
+docker-compose starts zookeeper on port `2181` and Kafka on port `9092` along with some configurations:
 1. Zookeeper
 	1. **`ZOOKEEPER_CLIENT_PORT`** - Port where Zookeeper would be available.
 	2. **`ZOOKEEPER_TICK_TIME `**- the length of a single tick.
@@ -54,14 +54,10 @@ this starts zookeeper on port `2181` and Kafka on port `9092` along with some co
 2. Kafka
 	1. **`KAFKA_ZOOKEEPER_CONNECT`** - Instructs Kafka how to connect to ZooKeeper.
 	2. **`KAFKA_LISTENER_SECURITY_PROTOCOL_MAP`** - Defines key/value pairs for the security protocol to use, per listener name.
-	3. **`KAFKA_ADVERTISED_LISTENERS`** - A comma-separated list of listeners with their host/IP and port.
+	3. **`KAFKA_ADVERTISED_LISTENERS`** - A comma-separated list of listeners with their host/IP and port. Read more about kafka listeners [here](https://www.confluent.io/blog/kafka-listeners-explained/).
 	4. **`KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR`** - Equivalent of broker configuration `offsets.topic.replication.factor` which is the replication factor for the offsets topic. Since we are running with just one Kafka node, we need to set this to 1.
 
-
-
-> To learn more about Kafka listeners, check out these blog posts:
-> 1. https://www.confluent.io/blog/kafka-listeners-explained/
-> 2. https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+>  Read nore about how the connection to kafka broker works in a docker container [here](https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/)
 
 <!--
 Ref -
@@ -70,40 +66,36 @@ https://rmoff.net/2018/08/02/kafka-listeners-explained/
 
 ## Create Topics in Kafka
 
-Kafka topics are like database tables(except for a few other details). Just like a database, we have to create a table to start storing the data, for Kafka we have to create a topic.
+Kafka topics are like database tables. Just like a database, we have to create a table to start storing the data, for Kafka we have to create a topic.
 
 Unlike a database that has a command to create a database, Kafka comes with some utility scripts, one of which is to create a topic that requires mandatory input as the topic name and a few other optional arguments.
 
-1. log in to the Kafka container
-
-```bash
-docker-compose exec kafka bash
-```
+1. Log in to the Kafka container
+	```bash
+	docker-compose exec kafka bash
+	```
 
 2. Create a topic by the name `kafka-test`
+	```bash
+	/usr/bin/kafka-topics \
+	             --bootstrap-server broker:9092 \
+	             --create \
+	             --topic kafka-test
+	Created topic kafka-test.
+	```
 
-```bash
-/usr/bin/kafka-topics \
-             --bootstrap-server broker:9092 \
-             --create \
-             --topic kafka-test \ 
-             --replication-factor 
-Created topic kafka-test.
-```
-
-Try running it again and you will get this error: 
+Try running this command again and you will get this error: 
 
 > Error while executing the topic command: Topic 'kafka-test' already exists.
 
-So, Not so much CI friendly ?? `--if-not-exists` allows to create a topic only when it doesn't exist:
+Not so much CI friendly right ?? `--if-not-exists` allows you to create a topic if it doesn't exist and retuns exit code 0.
 
 ```bash
 /usr/bin/kafka-topics \
              --bootstrap-server broker:9092 \
              --create \
              --if-not-exists \
-             --topic kafka-test \
-             --replication-factor 1
+             --topic kafka-test
 ```
 
 There are a couple of other arguments that are essential for a good understanding of Kafka:
@@ -112,18 +104,18 @@ There are a couple of other arguments that are essential for a good understandin
 2.  **`--replication-factor`** - To make data in a topic fault-tolerant and highly-available, every topic can be replicated, so that there are always multiple brokers that have a copy of the data.
 
 ## What's a Kafka Message
-Once we have the topic created, we can start sending messages to the topic. A Message consists of a variable-length header, a key, and a value. Let's talk about each of these.
+Once we have the topic created, we can start sending messages to the topic. A Message consists of headers, a key, and a value. Let's talk about each of these.
 
-1. Header - Headers are key-value pairs and give the ability to add some metadata about the kafka message. Read the original KIP(Kafka Improvement Proposals) proposing headers [here](https://cwiki.apache.org/confluence/display/KAFKA/KIP-82+-+Add+Record+Headers)
+1. **`Headers`** - Headers are key-value pairs and give the ability to add some metadata about the kafka message. Read the original KIP(Kafka Improvement Proposals) proposing headers [here](https://cwiki.apache.org/confluence/display/KAFKA/KIP-82+-+Add+Record+Headers).
 
-2. Key - Key for the kafka message. The key value can be null. Randomly chosen keys (i.e. serial numbers and UUID) are the best example of message keys. Read more about when you should use a key [here](https://forum.confluent.io/t/what-should-i-use-as-the-key-for-my-kafka-message/312/2).
+2. **`Key`** - Key for the kafka message. The key value can be null. Randomly chosen keys (i.e. serial numbers and UUID) are the best example of message keys. Read more about when you should use a key [here](https://forum.confluent.io/t/what-should-i-use-as-the-key-for-my-kafka-message/312/2).
 
-3.  Value - Actual data to be stored in kafka. Could be a string, json, Protobuf, or AVRO data format.
+3.  **`Value`** - Actual data to be stored in kafka. Could be a string, json, Protobuf, or AVRO data format.
 
 ## Writing to a Kafka Topic
-Kafka provides a [Producer API](https://docs.confluent.io/platform/current/clients/producer.html) to send a message to the Kafka topic. This API is available in java with [kafka-clients](https://kafka.apache.org/33/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html) library and python with [kafka-python](https://kafka-python.readthedocs.io/en/master/apidoc/KafkaProducer.html).
+Kafka provides a [Producer API](https://docs.confluent.io/platform/current/clients/producer.html) to send a message to the Kafka topic. This API is available in java with [kafka-clients](https://kafka.apache.org/33/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html) library and python with [kafka-python](https://kafka-python.readthedocs.io/en/master/apidoc/KafkaProducer.html) package.
 
-Luckily for us, we don't have to write any of these. Kafka comes with several out of box script that allows us to write data to a kafka topic. 
+Luckily for us, we don't have to use any of these. Kafka comes with an out of box script `kafka-console-producer` that allows us to write data to a kafka topic. 
 
 Run the command and as soon as the command returns `>` with a new line, enter the Json message:
 
@@ -138,9 +130,9 @@ We have successfully sent a message to the topic.
 
 > Enter `Control + C` to stop the script.
 
-however this message was sent without any key, To send a key we have to set the properties `parse.key` to allow sending the key and `key.separator` to set the separator for the key and value. 
+however this message was sent without any key, To send a key we have to set the properties `parse.key` to allow sending the key.
 
-> Default key separator is `\t(tab)`,we can set it wi `--property "key.separator=:"`
+> Default key separator is `\t(tab)`,we can change it by setting the property `key.separator`. **Eg:   --property "key.separator=:"**
 
 Let's try to send a message with a random key `stocks-123` this time:
 
@@ -154,6 +146,7 @@ Let's try to send a message with a random key `stocks-123` this time:
 
 With the release of kafka version [3.2.0](https://archive.apache.org/dist/kafka/3.2.0/RELEASE_NOTES.html), it's possible to [send headers using ConsoleProducer](https://cwiki.apache.org/confluence/display/KAFKA/KIP-798%3A+Add+possibility+to+write+kafka+headers+in+Kafka+Console+Producer) by setting the property `parse.headers` to **true**.
 
+Headers are metadata about the kafka message, souce of these stock prices would be a good candidate for the headers. Let's add a header key as `stock_source` and value as `nyse` to the Kafka message :
 
 ```bash
 /usr/bin/kafka-console-producer \
@@ -164,23 +157,39 @@ With the release of kafka version [3.2.0](https://archive.apache.org/dist/kafka/
 >stock_source:nyse	stocks-123	{"tickers": [{"name": "AMZN", "price": 1902}, {"name": "MSFT", "price": 107}, {"name": "AAPL", "price": 215}]}
 ```
 
-Check out supported properties for kafka-consoler-producer [here](https://github.com/apache/kafka/blob/trunk/core/src/main/scala/kafka/tools/ConsoleProducer.scala#L221-L240).
+Now we have successfully sent a kafka message with a header, key and value.
 
 ![baby-scream-yeah.gif](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/dwub7kn4d7nhy0ojs6e2.gif)
 
-## Reading from a Kafka Topic
-Kafka provides a [Consumer API](https://docs.confluent.io/platform/current/clients/consumer.html) to read messages from a Kafka topic. This API is available in java with [kafka-clients](https://kafka.apache.org/33/javadoc/index.html?org/apache/kafka/clients/consumer/KafkaConsumer.html) library and python with [kafka-python](https://kafka-python.readthedocs.io/en/master/apidoc/KafkaConsumer.html).
+> Check out supported properties for kafka-consoler-producer [here](https://github.com/apache/kafka/blob/trunk/core/src/main/scala/kafka/tools/ConsoleProducer.scala#L221-L240).
 
-kafka comes with out of box script to read messages from the kafka topic :
+## Reading from a Kafka Topic
+Kafka provides a [Consumer API](https://docs.confluent.io/platform/current/clients/consumer.html) to read messages from a Kafka topic. This API is available in java with [kafka-clients](https://kafka.apache.org/33/javadoc/index.html?org/apache/kafka/clients/consumer/KafkaConsumer.html) library and python with [kafka-python](https://kafka-python.readthedocs.io/en/master/apidoc/KafkaConsumer.html) package.
+
+Kafka comes with an out of box script `kafka-console-consumer` to read messages from the kafka topic:
+
+```bash
+/usr/bin/kafka-console-consumer \
+    --bootstrap-server kafka:9092 \
+    --topic kafka-test
+```
+
+However, this command only prints the values of the kafka message. To print the key and headers, we have to set the properties `print.headers`, `print.key` to **true**. We can also print the timestamp of the message with the property `print.timestamp`.
 
 ```bash
 /usr/bin/kafka-console-consumer \
     --bootstrap-server kafka:9092 \
     --topic kafka-test \
-    --from-beginning
+	--property print.headers=true \
+	--property print.key=true \
+	--property print.timestamp=true
 ```
 
-However, this command only prints the values of the kafka message, To print the key and headers, we have to set the properties
+There is other information such as `partition` and `offset`, they can be printed by setting the properties `--property print.offset=true` and  `--property print.partition=true`.
+
+Everytime we read from the a kafka topic, Kafka keeps track of the last offset the consumer read from and allows you to read from that point next time, however we can always read from the beginning using the arguments `--from-beginning`.
+
+To always read from a kafka topic from the beginning:
 
 ```bash
 /usr/bin/kafka-console-consumer \
@@ -188,14 +197,11 @@ However, this command only prints the values of the kafka message, To print the 
     --topic kafka-test \
     --from-beginning \
 	--property print.headers=true \
-	--property print.timestamp=true \
-	--property print.key=true
+	--property print.key=true \
+	--property print.timestamp=true
 ```
 
-There is other information too such as `partition` and `offset`, they can be printed by setting the properties `--property print.offset=true` and  `--property print.partition=true`.
-
-If you think, what we discussed above is too much to remember then don't.
-We have an easier way of reading and writing from Kafka topics.
+If you think, what we discussed above is too much to remember then don't worry We have an easier way of reading and writing from Kafka topics.
 
 ![baby-yoda](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/y6isvqojqtkmwe85pdsk.jpeg)
 
