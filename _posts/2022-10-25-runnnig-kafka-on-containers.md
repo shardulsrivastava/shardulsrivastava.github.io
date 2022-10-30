@@ -229,3 +229,6 @@ As Confluent puts it, "It is a swiss-army knife of tools for inspecting and crea
 	```
 
 Take a look at the examples [here](https://github.com/edenhill/kcat#examples) to find out more about the usage.
+
+[here](https://www.confluent.io/blog/5-things-every-kafka-developer-should-know/) are some tips and tricks of using Kafka.
+
