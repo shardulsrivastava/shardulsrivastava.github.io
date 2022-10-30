@@ -1,16 +1,3 @@
----
-layout: post
-title: Running Kafka On Containers
-canonical_url: https://dev.to/shardulsrivastava/understanding-istio-access-logs-2k5o
-author: shardul
-tags: [kafka, kubernetes, containers, eks]
-categories: [kafka, kubernetes, containers, eks]
-image: assets/images/kafka-on-containers.png
-description: "Running Kafka On Containers"
-featured: true
-comments: false
----
-
 Apache Kafka is one of the most famous data stores. It's a go-to tool to collect streaming data at scale and process them with either [Kafka streams](https://kafka.apache.org/documentation/streams/) or [Apache Spark](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html).
 
 Getting started with Kafka is challenging as it involves familiarizing a lot of new concepts such as topics, replication, and offsets, and then you have to understand what a Zookeeper is.
@@ -75,6 +62,7 @@ this starts zookeeper on port `2181` and Kafka on port `9092` along with some co
 > To learn more about Kafka listeners, check out these blog posts:
 > 1. https://www.confluent.io/blog/kafka-listeners-explained/
 > 2. https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+
 <!--
 Ref -
 https://rmoff.net/2018/08/02/kafka-listeners-explained/
@@ -178,7 +166,7 @@ With the release of kafka version [3.2.0](https://archive.apache.org/dist/kafka/
 
 Check out supported properties for kafka-consoler-producer [here](https://github.com/apache/kafka/blob/trunk/core/src/main/scala/kafka/tools/ConsoleProducer.scala#L221-L240).
 
-![baby-scream-yeah.gif]({{ site.baseurl }}/assets/images/baby-scream-yeah.gif)
+![baby-scream-yeah.gif](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/dwub7kn4d7nhy0ojs6e2.gif)
 
 ## Reading from a Kafka Topic
 Kafka provides a [Consumer API](https://docs.confluent.io/platform/current/clients/consumer.html) to read messages from a Kafka topic. This API is available in java with [kafka-clients](https://kafka.apache.org/33/javadoc/index.html?org/apache/kafka/clients/consumer/KafkaConsumer.html) library and python with [kafka-python](https://kafka-python.readthedocs.io/en/master/apidoc/KafkaConsumer.html).
@@ -209,7 +197,7 @@ There is other information too such as `partition` and `offset`, they can be pri
 If you think, what we discussed above is too much to remember then don't.
 We have an easier way of reading and writing from Kafka topics.
 
-![baby-yoda]({{ site.baseurl }}/assets/images/baby-yoda.jpeg)
+![baby-yoda](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/y6isvqojqtkmwe85pdsk.jpeg)
 
 ## kcat Utility
 [kcat](https://github.com/edenhill/kcat) is an awesome tool to make our life easier, it allows us to read and write from kafka topics without tons of scripts and in a more user-friendly way.
