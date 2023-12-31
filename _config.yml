@@ -20,8 +20,8 @@ authors:
     gravatar: b1cc14991db7a456fcd761680bbc8f81
     email: shardul.srivastava007@gmail.com
     web: https://shardul.dev
-    twitter: https://twitter.com/shardulsrivast
-    description: "Shardul is a Cloud architect focused on Data and Infrastructure"
+    twitter: https://twitter.com/shardulsrvstv
+    description: "Shardul is a seasoned Engineering Leader and Cloud expert focused on Data and Infrastructure"
 
 # Plugins
 plugins:
@@ -64,8 +64,8 @@ kramdown:
 
 # Adsense (change to "enabled" to activate, also your client id and ad slot. Create a new ad unit from your Adsense account to get the slot.)
 adsense: "enabled"
-adsense-data-ad-client: "ca-pub-7567361643264987"
-adsense-data-ad-slot: "4979186988"
+adsense-data-ad-client: "ca-pub-4339608862775894"
+adsense-data-ad-slot: "4791457368"
 
 # Lazy Images ("enabled" or "disabled")
 lazyimages: "disabled"
