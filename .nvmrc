@@ -1,0 +1,6 @@
+{
+  "name": "Shardul's Tech Portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A futuristic, cyberpunk-themed tech portfolio and blog built with Next.js, React, and Tailwind CSS"
+}
