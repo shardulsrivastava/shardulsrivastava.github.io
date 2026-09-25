@@ -1,6 +1,8 @@
-_site
+node_modules/
+.next/
+out/
+.env*.local
 .DS_Store
-*.swp
-.sass-cache
-*~
-.jekyll-cache
+*.tsbuildinfo
+next-env.d.ts
+.idea/
