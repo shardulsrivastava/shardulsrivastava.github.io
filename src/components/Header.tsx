@@ -21,7 +21,7 @@ export default function Header() {
         >
           <span className="text-accent">~/</span>
           {site.handle}
-          <span className="ml-0.5 inline-block w-[0.5ch] animate-pulse bg-accent text-transparent group-hover:bg-fg">
+          <span className="ml-0.5 inline-block w-[0.5ch] bg-accent text-transparent group-hover:bg-fg">
             _
           </span>
         </Link>
@@ -92,7 +92,7 @@ export default function Header() {
                       : "text-muted"
                   }`}
                 >
-                  <span className="mr-2 text-line">&gt;</span>
+                  <span aria-hidden="true" className="mr-2 text-line">&gt;</span>
                   {item.label}
                 </Link>
               </li>

@@ -34,7 +34,7 @@ export default async function TagPage({ params }: Params) {
           ← all topics
         </Link>
         <h1 className="mt-4 font-mono text-3xl font-bold tracking-tighter text-fg sm:text-4xl">
-          <span className="text-line">#</span>
+          <span aria-hidden="true" className="text-line">#</span>
           {tag}
         </h1>
         <p className="mt-3 font-mono text-sm text-muted">

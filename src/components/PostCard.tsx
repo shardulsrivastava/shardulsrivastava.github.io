@@ -25,7 +25,7 @@ export default function PostCard({ post }: { post: Post }) {
           {post.tags.slice(0, 4).map((tag) => (
             <li
               key={tag}
-              className="whitespace-nowrap border border-line-soft px-2 py-0.5 font-mono text-[0.6875rem] text-muted"
+              className="whitespace-nowrap border border-line-soft px-2 py-0.5 font-mono text-xs text-muted"
             >
               {tag}
             </li>

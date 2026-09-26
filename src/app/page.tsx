@@ -70,7 +70,7 @@ export default function Home() {
             {focus.map((f) => (
               <div key={f.k} className="bg-surface p-5">
                 <dt className="font-mono text-xs text-accent">
-                  <span className="text-line">#</span> {f.k}
+                  <span aria-hidden="true" className="text-line">#</span> {f.k}
                 </dt>
                 <dd className="mt-2 text-sm leading-relaxed text-muted">
                   {f.v}
@@ -149,7 +149,7 @@ export default function Home() {
               className="cursor-pointer border border-line-soft px-2.5 py-1 font-mono text-xs text-muted transition-colors duration-150 hover:border-accent hover:text-accent"
             >
               {tag}
-              <span className="ml-1.5 text-line">{count}</span>
+              <span className="ml-1.5 text-muted">{count}</span>
             </Link>
           ))}
         </div>

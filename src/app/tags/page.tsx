@@ -31,7 +31,7 @@ export default function TagsPage() {
               className="flex cursor-pointer items-center justify-between bg-surface px-4 py-3 font-mono text-sm text-fg transition-colors duration-150 hover:bg-elevated hover:text-accent"
             >
               <span>
-                <span className="text-line">#</span> {tag}
+                <span aria-hidden="true" className="text-line">#</span> {tag}
               </span>
               <span className="text-xs text-muted">{count}</span>
             </Link>

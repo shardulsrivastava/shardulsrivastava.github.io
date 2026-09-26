@@ -74,6 +74,11 @@ site. `prefers-reduced-motion` collapses all transitions in `globals.css`.
   menu button are all `h-11`/`size-11`)
 - Visible focus ring: 2px `--color-accent`, 3px offset, never removed
 - `cursor-pointer` on everything clickable
+- Secondary targets (tag chips, TOC links) at least 24×24px (WCAG 2.2
+  Target Size Minimum)
+- No text below 12px; `--color-line` is for rules and decorative glyphs
+  only, never for information, and such glyphs are `aria-hidden`
+- No infinite decorative animation (`ux-guidelines` Continuous Animation)
 - SVG icons only, no emoji
 - No horizontal page scroll at 375px; wide code blocks and tables scroll
   inside their own container

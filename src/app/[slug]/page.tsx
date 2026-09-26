@@ -107,7 +107,7 @@ export default async function PostPage({ params }: Params) {
             <li key={tag}>
               <Link
                 href={`/tags/${tag}/`}
-                className="inline-block cursor-pointer border border-line-soft px-2 py-0.5 font-mono text-[0.6875rem] text-muted transition-colors duration-150 hover:border-accent hover:text-accent"
+                className="inline-flex min-h-6 cursor-pointer items-center border border-line-soft px-2 py-0.5 font-mono text-xs text-muted transition-colors duration-150 hover:border-accent hover:text-accent"
               >
                 {tag}
               </Link>
@@ -136,7 +136,7 @@ export default async function PostPage({ params }: Params) {
                   >
                     <a
                       href={`#${h.id}`}
-                      className="block cursor-pointer py-0.5 text-[0.8125rem] leading-snug text-muted transition-colors duration-150 hover:text-accent"
+                      className="block min-h-6 cursor-pointer py-1 text-[0.8125rem] leading-snug text-muted transition-colors duration-150 hover:text-accent"
                     >
                       {h.text}
                     </a>
